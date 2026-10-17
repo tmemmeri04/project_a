@@ -6,7 +6,7 @@
 
 options(show.error.locations = TRUE)
 
-fulldata = read.csv("Harbor_Water_Quality_fixed.csv",stringsAsFactors=F)
+fulldata = read.csv(file.path("data", "raw", "Harbor_Water_Quality_fixed.csv"),stringsAsFactors=F)
 
 ourlocations = c('N4','TR1','TR2','N3C') # were for the triathalon
 Nloc = length(ourlocations)
@@ -32,4 +32,3 @@ for (i in 1:rowcount){ years[i] = as.integer(date_array[[i]][3])}
 # pick out data from 2024 only
 data = fulldata[which(years == 24),]
 print(data[1:3,1:5])
-

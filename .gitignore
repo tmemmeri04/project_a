@@ -2,3 +2,11 @@
 .RData
 .Rhistory
 .~lock.*#
+.quarto/
+outputs/figures/*
+!outputs/figures/.gitkeep
+outputs/tables/*
+!outputs/tables/.gitkeep
+reports/*.html
+reports/*.pdf
+reports/*_files/
