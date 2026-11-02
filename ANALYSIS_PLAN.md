@@ -19,38 +19,51 @@ The user writes the R code. Codex acts as a tutor by explaining concepts, review
 
 - `data/raw/` contains the source dataset exactly as downloaded.
 - `data/processed/` contains derived datasets created from the raw data.
-- `scripts/01_prepare_data.R` contains the active preparation and analysis work.
+- The active workflow runs in this order:
+  1. `scripts/01_create_filtered_data.r` selects locations and measurement columns from the raw data.
+  2. `scripts/02_wide_long_converter.r` loads the filtered data, converts types, and reshapes it to long format.
+  3. `scripts/03_data_sumarrizer.r` loads the long data and creates `summarized_data`.
 - `scripts/archive/` contains reference code that is not part of the active workflow.
+- `scripts/99_as_yet_unsused_sorting_scripts.r` contains unused location-splitting and seasonal code. It is outside the active workflow but has not yet been moved into the archive.
 - `outputs/figures/` and `outputs/tables/` are for generated results.
 - `reports/` is reserved for the later Quarto or LaTeX report.
-- Run project code from the project root by opening `Project_A.Rproj`.
+- Run project code from the project root, whether using VS Code or opening `Project_A.Rproj` in RStudio.
 
 ## Current status
 
-- The data has been filtered to NC1, NC2, and NC3 with four dissolved-oxygen measurement columns.
-- Separate location data frames (`nc1_data`, `nc2_data`, and `nc3_data`) have been created, and their dates have been converted to R `Date` values.
-- The Winkler columns have been converted to numeric in both the location data frames and `new_fulldata`.
-- A `pivot_longer()` transformation has been written to create `long_data` with `Measurement` and `Dissolved_Oxygen` columns.
-- A location-by-measurement summary pipeline has been drafted with total rows, missing rows, usable rows, mean, median, and standard deviation.
-- The summary block still needs a comma after `total_rows = n()` before it can run.
-- `long_data` and the 12-row summary output have not yet been validated from observed R output.
+Validated on November 2, 2026, using the saved scripts and local data:
+
+- `filtered_data.csv` contains 2,224 rows for NC1, NC2, and NC3 with four dissolved-oxygen measurement columns. It matches the current raw-data selection after normalizing date formatting and numeric types.
+- Script 02 converts the Winkler columns to numeric and `Sample.Date` to `Date` before reshaping.
+- `long_data` contains 8,896 rows, all four expected measurement labels, numeric `Dissolved_Oxygen`, and no missing dates. The saved long-data object matches the current transformation.
+- Each measurement has 741 rows at NC1, 741 at NC2, and 742 at NC3.
+- Script 03 runs successfully and creates `summarized_data` with 12 rows containing total rows, missing rows, usable rows, mean, median, and standard deviation. The missing comma has been fixed.
+- Missing-value counts per location/measurement group range from 229 to 233 for CTD and 168 to 178 for Winkler.
+- `summarized_data` exists in the R session but is not yet exported. It remains grouped by `Sampling.Location` after `summarise()`.
 - Skewness, faceted histograms, broader summaries, reporting, and modeling have not yet been implemented.
+
+## Workflow issues still to resolve
+
+- Script 01's `write_csv()` call is commented out. The existing filtered file is valid, but running scripts 01–03 does not yet recreate all derived data from scratch.
+- The saved scripts currently use `saveRDS()` and `readRDS()` for `data/processed/long_data.csv`. Its contents are RDS binary data despite the `.csv` extension. Align the filename and reader/writer: use `.rds` for R objects, or a CSV writer/reader for readable text. If choosing CSV, restore date types when loading it.
+- `README.md` still references the nonexistent `scripts/01_prepare_data.R`; update it to describe the three-script workflow.
+- Move the unused script 99 into `scripts/archive/` when organizing reference code; do not include it in the active run sequence.
 
 ## Analysis stages and progress
 
-1. Reshape the filtered data from wide to long form - **written; validation pending**.
-   - Keep sampling location and date.
-   - Create a `Measurement` column identifying the four measurement types.
-   - Create a numeric `Dissolved_Oxygen` column containing their values.
-   - Verify the result with `str(long_data)` before treating this stage as complete.
-   - Confirm whether `Sample.Date` should also be converted in `new_fulldata` or `long_data`; converting dates only in the three location data frames does not change the dates stored in `long_data`.
+1. Reshape the filtered data from wide to long form - **implemented and validated**.
+   - Sampling location and date are retained.
+   - `Measurement` identifies the four measurement types.
+   - `Dissolved_Oxygen` is numeric and `Sample.Date` is a `Date`.
+   - The validated output contains 8,896 rows (2,224 input rows times four measurements).
+   - The output filename/format mismatch remains a workflow issue, as documented above.
 
-2. Create the 12 primary summaries - **drafted; not yet run successfully**.
+2. Create the 12 primary summaries - **existing statistics implemented and validated; skewness pending**.
    - Group by location and measurement.
    - Three locations times four measurements should produce 12 groups.
    - Calculate total count, usable count, missing count, mean, median, standard deviation, and skewness.
-   - Correct the missing separator in the current `summarise()` call.
-   - Assign the verified result to a named object so it can later be plotted or exported.
+   - Total, missing, and usable counts, mean, median, and standard deviation are already calculated in the 12-row `summarized_data` object.
+   - Export the completed summary to `outputs/tables/`.
    - Choose and document a skewness definition before adding it.
 
 3. Create the 12 primary histograms - **not started**.
@@ -77,7 +90,7 @@ The user writes the R code. Codex acts as a tutor by explaining concepts, review
 ## Statistical decisions to document
 
 - Specify the skewness formula or package, including bias correction.
-- Always report sample sizes and missing-value counts, especially because Winkler measurements contain more missing data.
+- Always report sample sizes and missing-value counts. In the current filtered data, CTD measurements have more missing values than Winkler measurements.
 - Treat CTD/Winkler and top/bottom as different measurement types unless there is a scientific reason to pool them.
 - Recognize that measurements from the same sampling event may be paired rather than independent.
 - Before pooling methods, decide whether to average within each sampling event or treat every available measurement as a separate observation.
@@ -86,11 +99,10 @@ The user writes the R code. Codex acts as a tutor by explaining concepts, review
 
 ## Immediate next step
 
-Validate the code that is already written before adding more analysis:
+1. Align the long-data filename with its actual format and keep scripts 02 and 03 consistent.
+2. Make the filtered-data export reproducible from script 01, then verify the full workflow from a fresh R session.
+3. Choose and document the skewness definition, then add it to the existing summary.
+4. Export the completed 12-row summary to `outputs/tables/`.
+5. Build the 3-by-4 histogram grid with deliberate bin boundaries and axis scales.
 
-1. Add the missing separator after `total_rows = n()` in the summary block.
-2. Run through creation of `long_data` and inspect `str(long_data)`.
-3. Confirm that the four expected measurement labels exist and `Dissolved_Oxygen` is numeric.
-4. Check the date type, missing-value counts, and expected row count of 8,896 (2,224 original rows times four measurements).
-5. Run the grouped summary and confirm that it returns exactly 12 rows with plausible statistics.
-6. Save that result to a named object; then choose a skewness definition before adding skewness or beginning the histogram grid.
+Update the README and archive placement alongside these workflow changes. Recheck row counts, types, and missing-value counts when changing the data format or preparation steps.

@@ -6,6 +6,12 @@ long_data_path <- file.path(
     "long_data.csv"
 )
 
+summarized_data_path <- file.path(
+  "data",
+  "processed",
+  "summarized_data.csv"
+)
+
 long_data <- readRDS(long_data_path)
 
 #statistical summaries#
@@ -17,5 +23,8 @@ summarized_data <- long_data |>
         usable_rows = total_rows - missing_rows,
         mean = mean(Dissolved_Oxygen, na.rm = TRUE),
         median = median(Dissolved_Oxygen, na.rm = TRUE),
-        sd = sd(Dissolved_Oxygen, na.rm = TRUE)
+        sd = sd(Dissolved_Oxygen, na.rm = TRUE),
+        skewness = skewness(Dissolved_Oxygen)
     )
+
+saveRDS(summarized_data, summarized_data_path)
