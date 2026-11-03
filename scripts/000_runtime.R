@@ -1,0 +1,7 @@
+library(here)
+setwd(here())
+source(here("scripts","00_functions.R"))
+source(here("scripts","01_create_filtered_data.r"))
+source(here("scripts","02_wide_long_converter.r"))
+source(here("scripts","03_data_sumarrizer.r"))
+source(here("scripts","04_table_creator.R"))

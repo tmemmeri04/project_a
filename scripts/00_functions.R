@@ -5,7 +5,7 @@ skewness <- function(vec, na.rm = TRUE) {
   
   mean_vec <- mean(vec)
   sd_vec <- sd(vec)
-  skew <- (sum((vec-mean_vec)^3))/(length(vec)*sd_vec^3)
+  skew <- (sum((vec-mean_vec)^3))/((length(vec)-1)*sd_vec^3)
   
   return(skew)
 }
