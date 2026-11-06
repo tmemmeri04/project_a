@@ -9,7 +9,7 @@ seasonal_fractions <- long_data |>
         fraction = ifelse(
             nonmissing_rows >0,
             low_oxygen_rows / nonmissing_rows,
-            NA_real
+            NA_real_
         ),
         .groups = "drop"
     )
