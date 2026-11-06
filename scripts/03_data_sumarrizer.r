@@ -12,7 +12,7 @@ summarized_data_path <- file.path(
   "summarized_data.csv"
 )
 
-long_data <- readRDS(long_data_path)
+long_data <- read_csv(long_data_path)
 
 #statistical summaries#
 summarized_data <- long_data |>
@@ -27,4 +27,4 @@ summarized_data <- long_data |>
         skewness = skewness(Dissolved_Oxygen)
     )
 
-saveRDS(summarized_data, summarized_data_path)
+write_csv(summarized_data, summarized_data_path)

@@ -12,9 +12,8 @@ processed_data_path <- file.path(
     "processed",
     "filtered_data.csv"
 )
-new_fulldata <- read.csv(
-    processed_data_path, 
-    stringsAsFactors = FALSE
+new_fulldata <- read_csv(
+    processed_data_path
 )
 
 #editing new_fulldata characteristics#
@@ -37,4 +36,4 @@ long_data_path <- file.path(
     "long_data.csv"
 )
 
-saveRDS(long_data, long_data_path)
+write_csv(long_data, long_data_path)

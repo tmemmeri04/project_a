@@ -37,12 +37,20 @@ new_fulldata = data.frame(
     Dissolved_Oxygen_CTD_top = fulldata[[DO_CTD_top_h]][locations %in% relevant_locations], 
     Dissolved_Oxygen_CTD_bottom = fulldata[[DO_CTD_bottom_h]][locations %in% relevant_locations],
     Dissolved_Oxygen_winkler_top = fulldata[[DO_winkler_top_h]][locations %in% relevant_locations],
-    Dissolved_Oxygen_winkler_bottom = fulldata[[DO_winkler_bottom_h]][locations %in% relevant_locations]
+    Dissolved_Oxygen_winkler_bottom = fulldata[[DO_winkler_bottom_h]][locations %in% relevant_locations],
+    Season = ifelse(
+        format(as.Date(fulldata[[date_header]][locations %in% relevant_locations], format = "%m/%d/%Y"), "%m") %in% c("12", "01","02"),
+         "Winter",
+          ifelse (
+            format(as.Date(fulldata[[date_header]][locations %in% relevant_locations], format = "%m/%d/%Y"), "%m") %in% c("06", "07","08"), 
+            "Summer",
+            NA
+        )
+    )
 )
-
 ############################@#@@!@@#@!#!@#!@#!@#!@#!###
 ######                                                #
 # THIS HAS BEEN DONE!!! BE CAREFUL NOT TO DO IT AGAIN #
-# write_csv(new_fulldata, processed_data_path)        #
+ write_csv(new_fulldata, processed_data_path)        #
 #                                                ######
 ###############!@#@!#@!$@%#@#$!$!$@#@#@#@#@############
