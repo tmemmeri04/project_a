@@ -1,108 +1,159 @@
-# Harbor Dissolved Oxygen Analysis Plan
+# Newtown Creek DO: Current Analysis Plan
 
-## Goal
+## Goal and scope
 
-Analyze dissolved oxygen at locations NC1, NC2, and NC3 using four measurements:
+Analyze NC1-NC3 to address the water-quality assignment questions:
 
-- CTD top
-- CTD bottom
-- Winkler top
-- Winkler bottom
+1. Probability of DO <= 5 mg/L at each site in summer versus winter.
+2. Probability of all three sites, or exactly one site, failing simultaneously.
+3. Whether average DO differs between sites at the 95% confidence level.
+4. Whether daily changes in DO are correlated across sites.
 
-For each requested grouping, report the histogram, sample size, missing-value count, mean, standard deviation, and skewness. Later, add statistical models and produce an automated LaTeX report.
+Keep CTD/Winkler and top/bottom separate. Distribution fitting can support the
+answers; it does not replace the mean comparisons or daily-change analysis.
+The brief is `data/reference/Project_enveng264_Fall2026.pdf`.
 
-## Working approach
+## Working agreement
 
-The user writes the R code. Codex acts as a tutor by explaining concepts, reviewing the user's code and output, and giving incremental hints. Codex should not edit or rewrite the R analysis unless explicitly asked.
+The user normally writes analysis code and Codex tutors/reviews. On November 11,
+2026, the user explicitly authorized cleanup of invalid-value handling, plots,
+exports, and active documentation. Sample matching and the remaining assignment
+analyses were initially deferred. After comparing alternatives, the user finalized
+the original same-day/order empirical method with its time-window sensitivity
+check documented separately. No time filter is applied to the active estimates.
+The user has now added Anderson-Darling tests to script 05 for original DO and
+positive-only logged DO. The current next topic is reviewing and interpreting
+these results; the result tables are not yet exported. Further scientific choices should be
+discussed.
+Historical scripts and manually exported figures are reference-only in archive
+folders. The README describes the active runner and dependencies.
 
-## Project organization
+## Current decisions
 
-- `data/raw/` contains the source dataset exactly as downloaded.
-- `data/processed/` contains derived datasets created from the raw data.
-- The active workflow runs in this order:
-  1. `scripts/01_create_filtered_data.r` selects locations and measurement columns from the raw data.
-  2. `scripts/02_wide_long_converter.r` loads the filtered data, converts types, and reshapes it to long format.
-  3. `scripts/03_data_sumarrizer.r` loads the long data and creates `summarized_data`.
-- `scripts/archive/` contains reference code that is not part of the active workflow.
-- `scripts/99_as_yet_unsused_sorting_scripts.r` contains unused location-splitting and seasonal code. It is outside the active workflow but has not yet been moved into the archive.
-- `outputs/figures/` and `outputs/tables/` are for generated results.
-- `reports/` is reserved for the later Quarto or LaTeX report.
-- Run project code from the project root, whether using VS Code or opening `Project_A.Rproj` in RStudio.
+- Preserve raw data unchanged. Regenerate derived data from the source snapshot.
+- Parse source dates as month/day/year; processed dates are ISO dates.
+- Summer: June 21-September 20 inclusive. Winter: December 21-March 20 inclusive.
+  Other dates have missing `Season` and are excluded only from seasonal analyses.
+- By explicit user preference, script 02 removes negative measurement rows
+  entirely from long data. Remove only the affected method/depth observation,
+  not the other measurements from that sampling event. No duplicate DO or
+  negative-value flag columns are retained. Original values remain in raw/filtered
+  data and the separate `invalid_oxygen_readings` exclusion log.
+  Summary totals cover retained rows: total rows = missing rows + usable rows.
+  Zeros are counted separately within usable rows.
+- Retain recorded zeros as observations, without claiming their exact physical
+  interpretation is established. They count toward DO <= 5 mg/L.
+- Positive-only log diagnostics explicitly exclude zeros and invalid readings.
+  No arbitrary constant is added. Any lognormal conclusion will concern the
+  positive component unless a different observation model is justified.
+- Preserve original sampling time text in `Sample.Time.raw`. Unparseable times
+  stay missing; do not guess what numeric-looking time strings mean.
+- Retain the user's existing skewness formula by explicit request:
+  `sum((x - mean(x))^3) / ((n - 1) * sd(x)^3)`, where SD is R's sample SD.
+  This is dimensionless and is not adjusted Fisher-Pearson skewness. Return NA
+  for fewer than two values or undefined/zero SD.
+- Probability is count(DO <= 5) / count(usable DO) within the same group.
+  Preserve numeric precision in analysis; round presentation values only.
+- Report 95% Clopper-Pearson binomial intervals for observed proportions, with
+  lower and upper limits retained as numeric columns. These assume independent
+  observations with a common probability within the group. Temporal dependence,
+  nonstationarity, and missing-data selection remain limitations to evaluate.
+- `assumed_normal` is a plug-in fitted normal probability using the same usable
+  observations. It is neither a goodness-of-fit p-value nor a confidence interval.
+- Condensed summaries pool sites but keep measurement and season separate.
+  The 2025 summary pools sites and includes only top-water measurements.
 
-## Current status
+## Question 2: finalized empirical method
 
-Validated on November 2, 2026, using the saved scripts and local data:
+The full method, counts, probability estimates, sensitivity comparison and
+limitations are documented in [reports/question_2_methods.md](reports/question_2_methods.md).
 
-- `filtered_data.csv` contains 2,224 rows for NC1, NC2, and NC3 with four dissolved-oxygen measurement columns. It matches the current raw-data selection after normalizing date formatting and numeric types.
-- Script 02 converts the Winkler columns to numeric and `Sample.Date` to `Date` before reshaping.
-- `long_data` contains 8,896 rows, all four expected measurement labels, numeric `Dissolved_Oxygen`, and no missing dates. The saved long-data object matches the current transformation.
-- Each measurement has 741 rows at NC1, 741 at NC2, and 742 at NC3.
-- Script 03 runs successfully and creates `summarized_data` with 12 rows containing total rows, missing rows, usable rows, mean, median, and standard deviation. The missing comma has been fixed.
-- Missing-value counts per location/measurement group range from 229 to 233 for CTD and 168 to 178 for Winkler.
-- `summarized_data` exists in the R session but is not yet exported. It remains grouped by `Sampling.Location` after `summarise()`.
-- Skewness, faceted histograms, broader summaries, reporting, and modeling have not yet been implemented.
+- Use original same-day/order matching: group by date, measurement and site;
+  sort by sampling time; number readings; pair matching numbers across sites;
+  retain events with nonmissing DO at every site. Pool all seasons and years.
+- No time-window filter is applied. Unknown times are not explicitly excluded.
+  Describe these as same-day matched observations approximating simultaneous
+  conditions, rather than claiming exact simultaneity.
+- Separate 30-minute sensitivity analysis removes 4.5-6.1% of complete events.
+  Maximum absolute changes are 0.87 percentage points for all-three failure and
+  0.61 percentage points for exactly-one failure. This supports numerical
+  robustness on this snapshot, not proof of equivalence or accurate timing.
+- The exported table retains its existing provisional filename/caption because
+  simultaneity remains an approximation. The empirical method is settled.
+- Date/order matching plus a 30-minute filter gave the same triplets as the more
+  complex matcher. That helper, its checks and alternative exports are archived
+  as reference-only. Do not reintroduce it without an explicit request.
 
-## Workflow issues still to resolve
+## Histogram presentation
 
-- Script 01's `write_csv()` call is commented out. The existing filtered file is valid, but running scripts 01–03 does not yet recreate all derived data from scratch.
-- The saved scripts currently use `saveRDS()` and `readRDS()` for `data/processed/long_data.csv`. Its contents are RDS binary data despite the `.csv` extension. Align the filename and reader/writer: use `.rds` for R objects, or a CSV writer/reader for readable text. If choosing CSV, restore date types when loading it.
-- `README.md` still references the nonexistent `scripts/01_prepare_data.R`; update it to describe the three-script workflow.
-- Move the unused script 99 into `scripts/archive/` when organizing reference code; do not include it in the active run sequence.
+- Original-scale seasonal histograms use common 0.5 mg/L bins; positive-only
+  log histograms use common 0.2 log-unit bins. All 24 panels retain shared axes.
+- Summer is NYC DEP-inspired green (#78BE20) and winter blue (#0072CE).
+  These approximate the logo palette rather than verified brand specifications.
+  Panels display usable sample sizes, readable
+  measurement labels and a dashed reference at DO = 5 mg/L (log(5) on log plots).
+- These are presentation changes; observations and statistical results are unchanged.
 
-## Analysis stages and progress
+## Distribution diagnostics: current work
 
-1. Reshape the filtered data from wide to long form - **implemented and validated**.
-   - Sampling location and date are retained.
-   - `Measurement` identifies the four measurement types.
-   - `Dissolved_Oxygen` is numeric and `Sample.Date` is a `Date`.
-   - The validated output contains 8,896 rows (2,224 input rows times four measurements).
-   - The output filename/format mismatch remains a workflow issue, as documented above.
+- Visual review of the saved seasonal Q-Q plots suggests original-scale normal
+  fits are generally closer to straight lines than logged-data normal fits,
+  especially in winter. Some summer groups, particularly CTD top, show substantial
+  curvature or tail departures even on the original scale.
+- This is a visual assessment, not a finding that normality holds in every group.
+  Original-scale plots include zeros; log diagnostics concern positive values only.
+- Script 05 now runs `nortest::ad.test()` separately for each site/measurement/season
+  on original DO (`normality_results`) and positive-only logged DO
+  (`lognormality_results`). Both are in-memory tables with 24 groups, not exports.
+  A fresh run on November 12 produced 10 original-scale and 19 log-scale groups
+  with p <= 0.05. The code labels these "Fail" and other groups "Pass"; a "Pass"
+  means failure to reject normality, not proof of normality. Interpretation must
+  account for rounded data, repeated sampling, group sample sizes and multiplicity.
 
-2. Create the 12 primary summaries - **existing statistics implemented and validated; skewness pending**.
-   - Group by location and measurement.
-   - Three locations times four measurements should produce 12 groups.
-   - Calculate total count, usable count, missing count, mean, median, standard deviation, and skewness.
-   - Total, missing, and usable counts, mean, median, and standard deviation are already calculated in the 12-row `summarized_data` object.
-   - Export the completed summary to `outputs/tables/`.
-   - Choose and document a skewness definition before adding it.
+## Validated status: November 12, 2026
 
-3. Create the 12 primary histograms - **not started**.
-   - Use one 3-by-4 faceted figure: location by measurement.
-   - Use consistent bin boundaries and axis scales when comparisons require them.
+- Fresh runner completes through scripts 01-05.
+- Filtered data: 2,224 rows; reshaping produces 8,896 measurement rows;
+  long data retains 8,895 rows with valid dates after excluding one negative.
+- Filtered seasonal counts: summer 1,090; winter 156; other dates 978.
+- Across retained long data: 2,424 missing readings and 6,471 usable readings,
+  including 41 zeros. The separate exclusion log contains one negative reading.
+- Seventeen sampling records lack usable times (68 long rows). Three records
+  have malformed numeric-looking times; the other source times are missing.
+- Seasonal site summaries and probabilities each contain 24 groups.
+  Condensed summary: eight groups; 2025 top-water summary: four groups.
+- Four empirical date/order joint-probability rows are generated. Complete
+  event counts: CTD bottom 506; CTD top 508; Winkler bottom 562; Winkler top 570.
+- Eight CSV/LaTeX table pairs, one date/order matched-event CSV and eight PNG/PDF
+  figure pairs are generated. Previous time-window results are archived.
+- Seasonal diagnostics use the same site/method/depth/season grouping as the
+  probability analysis. Exploratory time plots use all seasons and are labelled.
+- All processed files are plain CSV. `summarized_data.csv` is also exported under
+  `outputs/tables/` for reporting. No output is an RDS object under a CSV extension.
 
-4. Create broader summaries - **not started**.
-   - Each measurement across all locations: 4 results.
-   - Each location across all measurements: 3 results.
-   - All locations and measurements combined: 1 result.
-   - Together with the primary summaries, this produces 20 summary rows.
+## Remaining work, in priority order
 
-5. Build the reporting workflow - **not started**.
-   - Keep data preparation, summaries, figures, and reporting as separate stages.
-   - Use knitr or Quarto to insert results and figures into a reproducible LaTeX/PDF report.
-   - Build the report only after the summary table and histogram figure are verified.
+1. Review the newly added Anderson-Darling tables for original and positive-only
+   logged DO within each site/measurement/season; discuss interpretation and
+   whether/how to export the results.
+   Question 2's empirical method and timing sensitivity are documented; no matching
+   change is pending.
+2. Decide how to compare site means, accounting for matched sampling occasions,
+   season and method/depth, and assumptions about repeated measurements.
+3. Define daily changes and align dates before analyzing cross-site correlations.
+   Consecutive sampled dates need not represent consecutive calendar days.
+4. Document the Anderson-Darling testing assumptions and distinguish exploratory
+   results from confirmatory inference. Resolve treatment of zeros for lognormal
+   models, rounding, temporal dependence,
+   and multiplicity across groups. A normality p-value is not model certainty.
+5. Write the engineering report with numbered/captioned tables and figures,
+   source references, justified assumptions and a code appendix. Choose a compact
+   subset of current diagnostics; the export collection is not the final report.
+6. Consider package version locking once the analysis choices are settled.
 
-6. Add modeling and prediction - **not started**.
-   - First decide whether the goal is distribution fitting or prediction.
-   - For prediction, clearly identify the response and predictors.
-   - Start with models suitable for continuous dissolved-oxygen measurements and validate them with diagnostics and out-of-sample testing.
-   - Export model definitions, estimates, diagnostics, and prediction results to the report.
+## Verification for changes
 
-## Statistical decisions to document
-
-- Specify the skewness formula or package, including bias correction.
-- Always report sample sizes and missing-value counts. In the current filtered data, CTD measurements have more missing values than Winkler measurements.
-- Treat CTD/Winkler and top/bottom as different measurement types unless there is a scientific reason to pool them.
-- Recognize that measurements from the same sampling event may be paired rather than independent.
-- Before pooling methods, decide whether to average within each sampling event or treat every available measurement as a separate observation.
-- Poisson models are generally for count responses and are not a natural choice for continuous dissolved-oxygen values. A Gaussian model is a more reasonable initial candidate, subject to diagnostic checks.
-- Account for dates, seasonality, and repeated sampling when designing prediction tests; avoid relying only on a random train/test split if future-date prediction is the goal.
-
-## Immediate next step
-
-1. Align the long-data filename with its actual format and keep scripts 02 and 03 consistent.
-2. Make the filtered-data export reproducible from script 01, then verify the full workflow from a fresh R session.
-3. Choose and document the skewness definition, then add it to the existing summary.
-4. Export the completed 12-row summary to `outputs/tables/`.
-5. Build the 3-by-4 histogram grid with deliberate bin boundaries and axis scales.
-
-Update the README and archive placement alongside these workflow changes. Recheck row counts, types, and missing-value counts when changing the data format or preparation steps.
+Use a fresh R process for a full runner check after pipeline changes. Check
+row/date preservation, raw-value traceability, invalid/zero treatment, grouped
+count identities, probability/CI bounds, expected exports and representative plot
+appearance. Keep final scientific validation separate from successful execution.

@@ -1,7 +1,7 @@
 #~~~~~~~`/\`!!!!~~~~~~~`/\`!!!!~~~~~~~`/\`!!!!~~~~~~~`/\`!!!!~~~~~~~`/\`!!!!~~~~~~~`/\`!!!!
 #this is my data cleaner, it should take the full dataset from nycopendata and condense it
 #down to only the relevant data needed for my analysis
-#this code is very much bespoke, and not meant to be used for any other purposes. 
+#this code is very much bespoke, and not meant to be used for any other purposes.
 #data source: https://data.cityofnewyork.us/Environment/Harbor-Water-Quality/5uug-f49n/about_data
 
 #declaring packages needed for this script
@@ -14,16 +14,16 @@ raw_data_path <- file.path("data", "raw", "Harbor_Water_Quality_20260929.csv")
 processed_data_path <- file.path("data", "processed", "filtered_data.csv")
 
 #strings as factors keeps the char strings as char strings
-fulldata <- read.csv(raw_data_path, stringsAsFactors = FALSE) 
+fulldata <- read.csv(raw_data_path, stringsAsFactors = FALSE)
 
 relevant_locations <- c('NC1', 'NC2', 'NC3')
 
 location_header <- 'Sampling.Location'
 date_header <- 'Sample.Date'
-DO_CTD_top_h <- 'CTD..conductivity..temperature..depth.profiler..Top.Dissolved.Oxygen..mg.L.' 
-DO_CTD_bottom_h <- 'CTD..conductivity..temperature..depth.profiler..Bottom.Dissolved.Oxygen..mg.L.' 
-DO_winkler_top_h <- 'Winkler.Method.Top.Dissolved.Oxygen..mg.L.' 
-DO_winkler_bottom_h <- 'Winkler.Method.Bottom.Dissolved.Oxygen..mg.L.' 
+DO_CTD_top_h <- 'CTD..conductivity..temperature..depth.profiler..Top.Dissolved.Oxygen..mg.L.'
+DO_CTD_bottom_h <- 'CTD..conductivity..temperature..depth.profiler..Bottom.Dissolved.Oxygen..mg.L.'
+DO_winkler_top_h <- 'Winkler.Method.Top.Dissolved.Oxygen..mg.L.'
+DO_winkler_bottom_h <- 'Winkler.Method.Bottom.Dissolved.Oxygen..mg.L.'
 
 #####################################################################################
 ## this creates a new output file with only the relevant locations (NC1, NC2, NC3) ##
@@ -31,26 +31,28 @@ DO_winkler_bottom_h <- 'Winkler.Method.Bottom.Dissolved.Oxygen..mg.L.'
 
 locations = fulldata[[location_header]] #extracting the column for sampling locations
 
+fulldata$Sample.Date <- as.Date(fulldata$Sample.Date, format = "%m/%d/%Y")
+stopifnot(!anyNA(fulldata$Sample.Date[locations %in% relevant_locations]))
+
 new_fulldata = data.frame(
-    Sampling.Location = locations[locations %in% relevant_locations],
-    Sample.Date = fulldata[[date_header]][locations %in% relevant_locations],
-    Dissolved_Oxygen_CTD_top = fulldata[[DO_CTD_top_h]][locations %in% relevant_locations], 
-    Dissolved_Oxygen_CTD_bottom = fulldata[[DO_CTD_bottom_h]][locations %in% relevant_locations],
-    Dissolved_Oxygen_winkler_top = fulldata[[DO_winkler_top_h]][locations %in% relevant_locations],
-    Dissolved_Oxygen_winkler_bottom = fulldata[[DO_winkler_bottom_h]][locations %in% relevant_locations],
-    Season = ifelse(
-        format(as.Date(fulldata[[date_header]][locations %in% relevant_locations], format = "%m/%d/%Y"), "%m") %in% c("12", "01","02"),
-         "Winter",
-          ifelse (
-            format(as.Date(fulldata[[date_header]][locations %in% relevant_locations], format = "%m/%d/%Y"), "%m") %in% c("06", "07","08"), 
-            "Summer",
-            NA
-        )
+  Sampling.Location = locations[locations %in% relevant_locations],
+  Sample.Date = fulldata[[date_header]][locations %in% relevant_locations],
+  Sample.Time = fulldata[['Sample.Time']][locations %in% relevant_locations],
+  Dissolved_Oxygen_CTD_top = fulldata[[DO_CTD_top_h]][locations %in% relevant_locations],
+  Dissolved_Oxygen_CTD_bottom = fulldata[[DO_CTD_bottom_h]][locations %in% relevant_locations],
+  Dissolved_Oxygen_winkler_top = fulldata[[DO_winkler_top_h]][locations %in% relevant_locations],
+  Dissolved_Oxygen_winkler_bottom = fulldata[[DO_winkler_bottom_h]][locations %in% relevant_locations],
+  Season = ifelse(
+    format(fulldata[[date_header]][locations %in% relevant_locations], "%m-%d") >= "12-21" |
+      format(fulldata[[date_header]][locations %in% relevant_locations], "%m-%d") <= "03-20",
+    "Winter",
+    ifelse (
+      format(fulldata[[date_header]][locations %in% relevant_locations], "%m-%d") >= "06-21" &
+        format(fulldata[[date_header]][locations %in% relevant_locations], "%m-%d") <= "09-20",
+      "Summer",
+      NA
     )
+  )
 )
-############################@#@@!@@#@!#!@#!@#!@#!@#!###
-######                                                #
-# THIS HAS BEEN DONE!!! BE CAREFUL NOT TO DO IT AGAIN #
- write_csv(new_fulldata, processed_data_path)        #
-#                                                ######
-###############!@#@!#@!$@%#@#$!$!$@#@#@#@#@############
+# Recreate the derived selection on every run; raw data is never changed.
+write_csv(new_fulldata, processed_data_path)
