@@ -23,11 +23,11 @@ write_plain_csv <- function(table, path) {
   readr::write_csv(table, connection)
 }
 
-export_table <- function(table, name, caption) {
+export_table <- function(table, name, caption, digits = 5) {
   table_path <- file.path("outputs", "tables", name)
   write_plain_csv(table, paste0(table_path, ".csv"))
   latex_table <- knitr::kable(
-    table, format = "latex", row.names = FALSE, digits = 5,
+    table, format = "latex", row.names = FALSE, digits = digits,
     caption = caption
   )
   writeLines(as.character(latex_table), paste0(table_path, ".tex"))

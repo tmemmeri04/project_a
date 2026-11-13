@@ -67,9 +67,15 @@ The time-filter check supports numerical robustness of these estimates; it does
 not remove the timing limitation. Complete-case estimates can also be affected
 by which sampling events have missing DO.
 
-Current outputs are `outputs/tables/provisional_joint_probabilities.csv` and its
-LaTeX counterpart, plus `matched_observations_date_order.csv`. The existing
-"provisional" filename/caption records the simultaneity limitation; the empirical
-counting method itself is now settled. Scripts and outputs are unchanged by this
-documentation update. Previous alternative matching outputs remain reference-only
-under `outputs/tables/archive/`.
+The user finalized the joint probabilities on November 12, 2026, with no time
+filter planned. Current outputs are `outputs/tables/joint_probabilities.csv`
+and its LaTeX counterpart, plus `matched_observations_date_order.csv`.
+The estimates and matching method are unchanged; the provisional label has
+been removed. The timing limitation remains in the table caption and should
+be stated when presenting results. Previous alternative matching outputs remain
+reference-only under `outputs/tables/archive/`.
+
+Suggested presentation disclaimer: "Joint probabilities use same-day/order
+matched observations across NC1-NC3. Sampling times may differ, so these
+observations approximate simultaneous conditions; no time-window filter was
+applied."

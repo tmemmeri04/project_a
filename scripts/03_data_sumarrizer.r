@@ -22,6 +22,8 @@ summarized_data <- long_data |>
     mean = mean(Dissolved_Oxygen, na.rm = TRUE),
     sd = sd(Dissolved_Oxygen, na.rm = TRUE),
     skewness = skewness(Dissolved_Oxygen),
+    min = if (usable_rows > 0) min(Dissolved_Oxygen, na.rm = TRUE) else NA_real_,
+    max = if (usable_rows > 0) max(Dissolved_Oxygen, na.rm = TRUE) else NA_real_,
     .groups = "drop"
   )
 

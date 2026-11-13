@@ -47,7 +47,7 @@ export_plot(seasonal_probability_plot, "seasonal_probabilities")
 export_table(seasonal_probabilities, "seasonal_probabilities",
              "Observed and fitted-normal probabilities of DO at or below 5 mg/L. Intervals are 95 percent binomial intervals for observed proportions, assuming independence.")
 
-# Original date/order matching. No sampling-time window is applied yet.
+# Final date/order matching method. No sampling-time window is applied.
 # First number each site's readings chronologically within each date/measurement.
 time_filtered_long_data <- long_data |>
   group_by(Sample.Date, Measurement, Sampling.Location) |>
@@ -78,6 +78,115 @@ summarized_simultaneous_measurements <- simultaneous_measurements |>
     .groups = "drop"
   )
 
+# Question 3: match each pair separately, without requiring the third site.
+# Existing missing Season values identify spring/fall; no new date rules.
+paired_site_measurements <- time_filtered_long_data |>
+  mutate(Season = ifelse(is.na(Season), "Spring/Fall", Season)) |>
+  pivot_wider(
+    id_cols = c(Measurement, Sample.Date, sample_round, Season),
+    names_from = Sampling.Location,
+    values_from = Dissolved_Oxygen
+  )
+
+NC1_NC2_pairs <- paired_site_measurements |>
+  filter(!is.na(NC1), !is.na(NC2)) |>
+  transmute(Pair = "NC1-NC2", Season, Measurement, Sample.Date, first_site = NC1, second_site = NC2)
+
+NC2_NC3_pairs <- paired_site_measurements |>
+  filter(!is.na(NC2), !is.na(NC3)) |>
+  transmute(Pair = "NC2-NC3", Season, Measurement, Sample.Date, first_site = NC2, second_site = NC3)
+
+NC1_NC3_pairs <- paired_site_measurements |>
+  filter(!is.na(NC1), !is.na(NC3)) |>
+  transmute(Pair = "NC1-NC3", Season, Measurement, Sample.Date, first_site = NC1, second_site = NC3)
+
+paired_site_data <- bind_rows(NC1_NC2_pairs, NC2_NC3_pairs, NC1_NC3_pairs)
+
+#QUESTION 4
+# Average change per elapsed day, then descriptive correlations across all seasons.
+daily_changes<- simultaneous_measurements |>
+  group_by(Measurement) |>
+  arrange(Sample.Date) |>
+     mutate(
+         NC1_change = (NC1 - lag(NC1))/as.numeric((Sample.Date - lag(Sample.Date))),
+         NC2_change = (NC2 - lag(NC2))/as.numeric((Sample.Date - lag(Sample.Date))),
+         NC3_change = (NC3 - lag(NC3))/as.numeric((Sample.Date - lag(Sample.Date)))
+     )
+
+corr_coeff_btwn_sites <- daily_changes |>
+  summarize(
+    NC1_NC2 = cor(NC1_change, NC2_change, use = "complete.obs"),
+    NC2_NC3 = cor(NC2_change, NC3_change, use = "complete.obs"),
+    NC1_NC3 = cor(NC1_change, NC3_change, use = "complete.obs")
+    )
+
+# Put the three site pairs into the same columns for plotting.
+correlation_plot_data <- bind_rows(
+  daily_changes |>
+    transmute(Measurement, Pair = "NC1 (x), NC2 (y)", x_change = NC1_change, y_change = NC2_change),
+  daily_changes |>
+    transmute(Measurement, Pair = "NC2 (x), NC3 (y)", x_change = NC2_change, y_change = NC3_change),
+  daily_changes |>
+    transmute(Measurement, Pair = "NC1 (x), NC3 (y)", x_change = NC1_change, y_change = NC3_change)
+) |>
+  ungroup() |>
+  filter(is.finite(x_change), is.finite(y_change)) |>
+  mutate(Pair = factor(Pair, levels = c(
+    "NC1 (x), NC2 (y)", "NC2 (x), NC3 (y)", "NC1 (x), NC3 (y)"
+  )))
+
+daily_change_regression_plot <- ggplot(correlation_plot_data, aes(x_change, y_change)) +
+  geom_point(alpha = 0.35, size = 1, color = "#52616b") +
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "#0072CE") +
+  facet_grid(Measurement ~ Pair, labeller = labeller(Measurement = measurement_labels)) +
+  labs(
+    title = "Association between sites' average daily DO changes",
+    subtitle = "Three site pairs; methods and depths kept separate; all seasons pooled",
+    x = "Average daily DO change at x site (mg/L/day)",
+    y = "Average daily DO change at y site (mg/L/day)",
+    caption = "Lines are descriptive linear fits. Temporal dependence is not modeled."
+  ) +
+  theme_minimal()
+
+export_plot(daily_change_regression_plot, "daily_change_regressions", width = 14, height = 11)
+
+
+# Add all-year copies so each pair also gets a test using every season.
+# "All year" pools all sampled years, rather than testing each calendar year.
+t_test_mean_diff <- bind_rows(
+  paired_site_data,
+  paired_site_data |> mutate(Season = "All year")
+) |>
+  group_by(Pair, Season, Measurement) |>
+  summarise(
+    p_value = t.test(first_site, second_site, paired = TRUE)$p.value,
+    .groups = "drop"
+  ) |>
+  mutate(
+    Measurement = recode(Measurement,
+      Dissolved_Oxygen_CTD_top = "CTD_top",
+      Dissolved_Oxygen_CTD_bottom = "CTD_bottom",
+      Dissolved_Oxygen_winkler_top = "Winkler_top",
+      Dissolved_Oxygen_winkler_bottom = "Winkler_bottom"
+    ),
+    Pair = factor(Pair, levels = c("NC1-NC2", "NC2-NC3", "NC1-NC3")),
+    Season = factor(Season, levels = c("Winter", "Summer", "Spring/Fall", "All year"))
+  ) |>
+  pivot_wider(names_from = Measurement, values_from = p_value) |>
+  arrange(Season == "All year", Pair, Season)
+
+print(t_test_mean_diff, n = Inf, width = Inf)
+export_table(
+  t_test_mean_diff, "paired_site_t_tests",
+  paste(
+    "Two-sided paired t-test p-values for same-day/order matched DO readings.",
+    "Each pair requires only its own two readings; no time-window filter is applied.",
+    "All year pools all seasons and sampled years. P-values are unadjusted for multiple tests;",
+    "independence between matched occasions is assumed."
+  ),
+  digits = Inf
+)
+
 normality_results <- long_data |>
   filter(Season %in% c("Summer", "Winter")) |>
   group_by(Sampling.Location, Measurement, Season) |>
@@ -100,7 +209,7 @@ lognormality_results <- loglong_data |>
     .groups = "drop"
   )
 
-export_table(summarized_simultaneous_measurements, "provisional_joint_probabilities",
-             "PROVISIONAL joint DO failure probabilities using original same-date/order matching. No time-window filter applied; all seasons pooled. Failure means DO at or below 5 mg/L.")
+export_table(summarized_simultaneous_measurements, "joint_probabilities",
+             "Joint DO failure probabilities from same-day/order matched observations, approximating simultaneous conditions. Sampling times may differ; no time-window filter is applied. All seasons pooled. Failure means DO at or below 5 mg/L.")
 write_plain_csv(simultaneous_measurements,
                 file.path("outputs", "tables", "matched_observations_date_order.csv"))
