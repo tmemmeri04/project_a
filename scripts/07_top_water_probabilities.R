@@ -72,7 +72,7 @@ top_seasonal_probabilities <- bind_rows(
 export_table(
   top_seasonal_probabilities, "top_seasonal_probabilities",
   paste(
-    "Top-water observed and fitted-normal probabilities of DO at or below 5 mg/L.",
+    "Surface observed and fitted-normal probabilities of DO at or below 5 mg/L.",
     "Methods and sites are pooled by reading counts where indicated.",
     "Fitted-normal probabilities use each group's mean and sample SD, including pooled readings.",
     "95 percent binomial intervals assume independent readings;",
@@ -114,12 +114,11 @@ top_seasonal_probability_plot <- ggplot(
     labels = function(x) paste0(round(100 * x), "%")
   ) +
   labs(
-    title = "Seasonal low-oxygen probabilities: top water",
+    title = "Seasonal low-oxygen probabilities: surface",
     subtitle = "Observed fractions with 95% binomial confidence intervals",
     x = NULL, y = "Probability of DO <= 5 mg/L",
     caption = paste(
-      "Combined estimates pool reading counts; recorded zeros are retained.",
-      "Intervals assume independent readings; paired methods and repeated sampling may violate this assumption.",
+      "Confidence intervals assume independent readings.",
       sep = "\n"
     )
   ) +

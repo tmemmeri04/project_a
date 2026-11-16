@@ -85,8 +85,12 @@ depth_distribution_diagnostics <- function(depth, probability_table) {
     paste("Normal and lognormal AD labels for zero-free", depth,
       "probability-table groups. Pass means failure to reject at 0.05, not proof of the model."))
 
-  make_histograms <- function(logged = FALSE) {
+  make_histograms <- function(logged = FALSE, pooled_only = FALSE) {
     data <- if (logged) positive_data else usable_data
+    if (pooled_only) {
+      data <- data |> filter(Measurement == combined_label) |>
+        mutate(panel = droplevels(panel))
+    }
     if (logged) data <- data |> mutate(Dissolved_Oxygen = log(Dissolved_Oxygen))
     counts <- data |> count(panel, name = "sample_size")
     ggplot(data, aes(x = Dissolved_Oxygen, fill = Season)) +
@@ -96,7 +100,7 @@ depth_distribution_diagnostics <- function(depth, probability_table) {
         linetype = "dashed", color = "#a0473b", linewidth = 0.5) +
       geom_text(data = counts, aes(x = Inf, y = Inf, label = paste0("n = ", sample_size)),
         inherit.aes = FALSE, hjust = 1.1, vjust = 1.5, size = 3, color = "#52616b") +
-      facet_wrap(~panel, ncol = 4, scales = "free_y") +
+      facet_wrap(~panel, ncol = if (pooled_only) 2 else 4, scales = "free_y") +
       scale_fill_manual(values = c(Summer = "#78BE20", Winter = "#0072CE")) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
       histogram_theme +
@@ -104,7 +108,8 @@ depth_distribution_diagnostics <- function(depth, probability_table) {
       labs(
         title = paste(if (logged) "Log DO:" else "Dissolved oxygen:", depth, "water"),
         subtitle = paste(
-          "Same 20 groups as the probability table; shared x-axis, separate count axes",
+          if (pooled_only) "CTD and Winkler pooled by site and across all sites; shared x-axis"
+          else "Same 20 groups as the probability table; shared x-axis, separate count axes",
           if (logged) "Positive readings only; 0.2 log-unit bins; dashed line marks DO = 5 mg/L"
           else "Zeros retained; 0.5 mg/L bins; dashed line marks DO = 5 mg/L", sep = "\n"),
         x = if (logged) "ln(DO / (1 mg/L))" else "Dissolved oxygen (mg/L)",
@@ -118,10 +123,15 @@ depth_distribution_diagnostics <- function(depth, probability_table) {
   export_plot(histograms, paste0(depth, "_grouped_histograms"), width = 16, height = 15)
   export_plot(log_histograms, paste0(depth, "_grouped_positive_log_histograms"),
               width = 16, height = 15)
+  # Eight panels: Summer/Winter for NC1, NC2, NC3, and all sites pooled.
+  pooled_histograms <- make_histograms(pooled_only = TRUE)
+  export_plot(pooled_histograms, paste0(depth, "_combined_methods_histograms"),
+              width = 12, height = 12)
   print(comparison, n = Inf, width = Inf)
   list(grouped_data = grouped_data, normality_results = normal_results,
        lognormality_results = lognormal_results, comparison = comparison,
-       histograms = histograms, log_histograms = log_histograms)
+       histograms = histograms, log_histograms = log_histograms,
+       pooled_histograms = pooled_histograms)
 }
 
 top_distribution_diagnostics <- depth_distribution_diagnostics("top", top_seasonal_probabilities)
@@ -133,3 +143,36 @@ top_distribution_test_comparison <- top_distribution_diagnostics$comparison
 bottom_normality_results <- bottom_distribution_diagnostics$normality_results
 bottom_lognormality_results <- bottom_distribution_diagnostics$lognormality_results
 bottom_distribution_test_comparison <- bottom_distribution_diagnostics$comparison
+
+# All sites and both methods pooled: one panel per depth and season.
+all_sites_histogram_data <- long_data |>
+  filter(Season %in% c("Summer", "Winter"), !is.na(Dissolved_Oxygen),
+         Measurement %in% c("Dissolved_Oxygen_CTD_top", "Dissolved_Oxygen_winkler_top",
+                            "Dissolved_Oxygen_CTD_bottom", "Dissolved_Oxygen_winkler_bottom")) |>
+  mutate(
+    Depth = if_else(grepl("_top$", Measurement), "Top", "Bottom"),
+    panel = factor(paste(Depth, Season, sep = " | "),
+      levels = c("Top | Winter", "Top | Summer", "Bottom | Winter", "Bottom | Summer"))
+  )
+
+all_sites_histogram_counts <- all_sites_histogram_data |> count(panel, name = "sample_size")
+all_sites_combined_histograms <- ggplot(
+  all_sites_histogram_data, aes(x = Dissolved_Oxygen, fill = Season)
+) +
+  geom_histogram(binwidth = 0.5, boundary = 0, closed = "left",
+                 color = "white", linewidth = 0.2) +
+  geom_vline(xintercept = 5, linetype = "dashed", color = "#a0473b") +
+  geom_text(data = all_sites_histogram_counts,
+    aes(x = Inf, y = Inf, label = paste0("n = ", sample_size)),
+    inherit.aes = FALSE, hjust = 1.1, vjust = 1.5, size = 3) +
+  facet_wrap(~panel, ncol = 2, scales = "free_y") +
+  scale_fill_manual(values = c(Summer = "#78BE20", Winter = "#0072CE")) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
+  histogram_theme +
+  labs(
+    title = "Dissolved oxygen: all sites and both methods",
+    subtitle = "0.5 mg/L bins; dashed line marks DO = 5 mg/L",
+    x = "Dissolved oxygen (mg/L)", y = "Number of observations"
+  )
+
+export_plot(all_sites_combined_histograms, "all_sites_combined_histograms", width = 12, height = 8)

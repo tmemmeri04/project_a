@@ -78,6 +78,52 @@ summarized_simultaneous_measurements <- simultaneous_measurements |>
     .groups = "drop"
   )
 
+# Question 2 figure: both joint events, with top/bottom readings kept separate.
+joint_probability_plot_data <- summarized_simultaneous_measurements |>
+  pivot_longer(c(all_three_fail, only_one_fails),
+               names_to = "Event", values_to = "probability") |>
+  mutate(
+    Method = if_else(grepl("CTD", Measurement), "CTD", "Winkler"),
+    Depth = factor(if_else(grepl("_top$", Measurement), "Top", "Bottom"),
+                   levels = c("Top", "Bottom")),
+    Event = factor(Event, levels = c("all_three_fail", "only_one_fails"),
+      labels = c("All three sites at or below 5 mg/L", "Exactly one site at or below 5 mg/L"))
+  ) |>
+  rowwise() |>
+  mutate(
+    event_count = round(probability * total_complete_measurements),
+    interval = list(binom.test(event_count, total_complete_measurements)$conf.int),
+    lower = interval[1], upper = interval[2]
+  ) |>
+  ungroup() |>
+  select(-interval)
+
+joint_probability_plot <- ggplot(
+  joint_probability_plot_data,
+  aes(x = Method, y = probability, color = Depth, shape = Depth)
+) +
+  geom_errorbar(aes(ymin = lower, ymax = upper),
+    position = position_dodge(width = 0.4), width = 0.12, linewidth = 0.6) +
+  geom_point(position = position_dodge(width = 0.4), size = 3) +
+  facet_wrap(~Event, ncol = 2) +
+  scale_color_manual(values = c(Top = "#0072CE", Bottom = "#78BE20")) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2),
+    labels = function(x) paste0(round(100 * x), "%")) +
+  labs(
+    title = "Joint low-oxygen probabilities across NC1, NC2 and NC3",
+    subtitle = "All seasons pooled; observed fractions with 95% Clopper-Pearson intervals",
+    x = NULL, y = "Probability",
+    caption = paste("Same-day/order matching; no time-window filter. Sampling times may differ.",
+      "Intervals assume independent matched events with a common event probability; temporal dependence is not modeled.",
+      sep = "\n")
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "top", panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(), strip.text = element_text(face = "bold"),
+    plot.title = element_text(face = "bold"), plot.caption = element_text(hjust = 0))
+
+export_plot(joint_probability_plot, "joint_probabilities", width = 12, height = 7)
+
 # Question 3: match each pair separately, without requiring the third site.
 # Existing missing Season values identify spring/fall; no new date rules.
 paired_site_measurements <- time_filtered_long_data |>
@@ -120,6 +166,25 @@ corr_coeff_btwn_sites <- daily_changes |>
     NC1_NC3 = cor(NC1_change, NC3_change, use = "complete.obs")
     )
 
+# Readable Question 4 table; retain the original coefficients above at full precision.
+daily_change_correlations <- corr_coeff_btwn_sites |>
+  ungroup() |>
+  mutate(
+    Method = if_else(grepl("CTD", Measurement), "CTD", "Winkler"),
+    Depth = factor(if_else(grepl("_top$", Measurement), "Top", "Bottom"),
+                   levels = c("Top", "Bottom"))
+  ) |>
+  arrange(Depth, Method) |>
+  select(Depth, Method, `NC1-NC2` = NC1_NC2, `NC2-NC3` = NC2_NC3, `NC1-NC3` = NC1_NC3)
+
+export_table(
+  daily_change_correlations, "daily_change_correlations",
+  paste("Pearson correlation coefficients (r) between sites' average DO changes per elapsed day.",
+    "All seasons pooled; methods and depths kept separate. Values shown to three decimal places.",
+    "Rates use consecutive complete three-site matched events. Temporal dependence is not modeled."),
+  digits = 3
+)
+
 # Put the three site pairs into the same columns for plotting.
 correlation_plot_data <- bind_rows(
   daily_changes |>
@@ -159,15 +224,15 @@ t_test_mean_diff <- bind_rows(
 ) |>
   group_by(Pair, Season, Measurement) |>
   summarise(
-    p_value = t.test(first_site, second_site, paired = TRUE)$p.value,
+    p_value = signif(t.test(first_site, second_site, paired = TRUE)$p.value, digits = 3),
     .groups = "drop"
   ) |>
   mutate(
     Measurement = recode(Measurement,
-      Dissolved_Oxygen_CTD_top = "CTD_top",
-      Dissolved_Oxygen_CTD_bottom = "CTD_bottom",
-      Dissolved_Oxygen_winkler_top = "Winkler_top",
-      Dissolved_Oxygen_winkler_bottom = "Winkler_bottom"
+      Dissolved_Oxygen_CTD_top = "CTD top",
+      Dissolved_Oxygen_CTD_bottom = "CTD bottom",
+      Dissolved_Oxygen_winkler_top = "Winkler top",
+      Dissolved_Oxygen_winkler_bottom = "Winkler bottom"
     ),
     Pair = factor(Pair, levels = c("NC1-NC2", "NC2-NC3", "NC1-NC3")),
     Season = factor(Season, levels = c("Winter", "Summer", "Spring/Fall", "All year"))
@@ -179,12 +244,12 @@ print(t_test_mean_diff, n = Inf, width = Inf)
 export_table(
   t_test_mean_diff, "paired_site_t_tests",
   paste(
-    "Two-sided paired t-test p-values for same-day/order matched DO readings.",
+    "Two-sided paired t-test p-values, rounded to three significant figures, for same-day/order matched DO readings.",
     "Each pair requires only its own two readings; no time-window filter is applied.",
     "All year pools all seasons and sampled years. P-values are unadjusted for multiple tests;",
     "independence between matched occasions is assumed."
   ),
-  digits = Inf
+  digits = Inf, significant_digits = 3
 )
 
 normality_results <- long_data |>

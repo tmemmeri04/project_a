@@ -19,13 +19,30 @@ summarized_data <- long_data |>
     missing_rows = sum(is.na(Dissolved_Oxygen)),
     usable_rows = sum(!is.na(Dissolved_Oxygen)),
     zero_rows = sum(Dissolved_Oxygen == 0, na.rm = TRUE),
-    mean = mean(Dissolved_Oxygen, na.rm = TRUE),
-    sd = sd(Dissolved_Oxygen, na.rm = TRUE),
-    skewness = skewness(Dissolved_Oxygen),
+    mean = round(mean(Dissolved_Oxygen, na.rm = TRUE), digits = 3),
+    sd = sd(Dissolved_Oxygen, na.rm = TRUE) |> round(digits = 3),
+    skewness = skewness(Dissolved_Oxygen)|> round(digits = 3),
+    median = median(Dissolved_Oxygen, na.rm = TRUE)|> round(digits = 3),
     min = if (usable_rows > 0) min(Dissolved_Oxygen, na.rm = TRUE) else NA_real_,
     max = if (usable_rows > 0) max(Dissolved_Oxygen, na.rm = TRUE) else NA_real_,
     .groups = "drop"
   )
+
+"
+summarized_data <- long_data |>
+  filter(Season %in% c("Summer", "Winter")) |>
+  group_by(Sampling.Location, Measurement, Season) |>
+  summarise(
+    usable_rows = sum(!is.na(Dissolved_Oxygen)),
+    mean = round(mean(Dissolved_Oxygen, na.rm = TRUE), digits = 3),
+    sd = sd(Dissolved_Oxygen, na.rm = TRUE) |> round(digits = 3),
+    skewness = skewness(Dissolved_Oxygen)|> round(digits = 3),
+    median = median(Dissolved_Oxygen, na.rm = TRUE)|> round(digits = 3),
+    min = if (usable_rows > 0) min(Dissolved_Oxygen, na.rm = TRUE) else NA_real_,
+    max = if (usable_rows > 0) max(Dissolved_Oxygen, na.rm = TRUE) else NA_real_,
+    .groups = "drop"
+  )
+"
 
 condensed_summary <- long_data |>
   filter(Season %in% c("Summer", "Winter")) |>

@@ -57,7 +57,9 @@ objects after editing; previously loaded R objects do not update themselves.
 - `data/processed/`: regenerated **plain-text CSV**, not RDS. The filtered file
   preserves selected source readings. The long file excludes negative DO rows
   and retains original time text; excluded measurements have a separate log.
-- `outputs/tables/`: seventeen tables, each exported as CSV and a LaTeX table fragment.
+- `outputs/tables/`: eighteen tables, each exported as CSV and a LaTeX table fragment.
+  `daily_change_correlations` presents Q4 Pearson r values by depth, method,
+  and site pair; its LaTeX version displays three decimal places.
   These include seasonal, condensed and 2025 summaries, seasonal probabilities,
   data-quality counts, negative-reading/time audits, and finalized joint results.
   `matched_observations_date_order.csv` additionally lists the current triplets.
@@ -75,7 +77,7 @@ objects after editing; previously loaded R objects do not update themselves.
   [Question 3 methods](reports/question_3_methods.md) for assumptions.
 - `outputs/tables/archive/`: earlier date/order exports and superseded 30/60-minute
   matching results, retained for reference.
-- `outputs/figures/`: fifteen named figures, each exported as PNG and PDF.
+- `outputs/figures/`: nineteen named figures, each exported as PNG and PDF.
   Four distribution diagnostics separate site, method/depth and season; three
   time plots are explicitly exploratory; one shows seasonal probabilities with CIs.
   Two additional figures show the depth-specific 20-row probability tables.
@@ -83,6 +85,15 @@ objects after editing; previously loaded R objects do not update themselves.
   `top_grouped_histograms`, `top_grouped_positive_log_histograms`, and the
   corresponding `bottom_*` figures. Each has 20 panels, shared x-axis and
   separate count axes so pooled and smaller groups are both readable.
+  `top_combined_methods_histograms` and `bottom_combined_methods_histograms`
+  show only pooled CTD/Winkler readings: eight panels each for the three sites
+  and all sites combined, separated by Summer/Winter. Zeros are retained.
+  `all_sites_combined_histograms` shows four panels: top/bottom by Winter/Summer,
+  with both methods and all sites pooled in each panel.
+  `joint_probabilities` shows Q2's two joint events in separate panels, with
+  CTD/Winkler on the x-axis and top/bottom estimates with 95% Clopper-Pearson
+  intervals. These intervals assume independent matched events with a common
+  event probability; temporal dependence is not modeled.
   `daily_change_regressions` shows the three site-pair regressions in columns
   and four method/depth combinations in rows, using average changes per elapsed day.
 - `outputs/figures/archive/`: older manual figure exports, retained for reference.

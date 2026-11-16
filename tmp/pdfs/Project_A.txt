@@ -1,0 +1,855 @@
+  Water Quality Assessment for
+Newtown Creek: Oxygen for Fish
+
+Sub-project A / ENGR 26400
+
+Author:                                      Instructor:
+Terra Emmerich                     Brian Vant-Hull
+
+                November 16, 2026
+                         Abstract
+
+concise, all key points
+
+                         1
+Contents
+
+1 Introduction                3
+
+2 Procedure                   4
+
+2.1 Data Procurement and cleaning . . . . . . . . . . . . . . . . . . . . . . . 4
+
+2.2 Probability calculations . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+
+2.3 Joint low-oxygen probabilities . . . . . . . . . . . . . . . . . . . . . . . . 5
+
+2.4 Paired comparisons of the means of dissolved oxygen . . . . . . . . . . . 6
+
+2.5 Assessing the possibility of correlation between sites . . . . . . . . . . . . 6
+
+3 Results and Analysis        8
+
+3.1 Probabilities of not meeting the 5 mg/L standards at each site across seasons 9
+
+3.2 Simultaneous probability analysis . . . . . . . . . . . . . . . . . . . . . . 11
+
+3.3 Testing mean differences at 95% confidence . . . . . . . . . . . . . . . . . 12
+
+3.4 Daily change correlation . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+
+4 Conclusions                 14
+
+A Summary statistics          16
+
+B Histogram views of Data     18
+
+C tables                      26
+
+                           2
+1 Introduction
+
+Newtown Creek is one of the most polluted waterways in America, "1978 would mark a
+pivotal year for Newtown Creek's recovery. A coast guard helicopter patrolling overhead
+spotted an oil slick on the surface of the Creek that was seeping from the ground in
+Greenpoint from the bulkheads at Apollo Street. What was revealed was more than 17
+million gallons of oil that was covering 55 acres, the largest terrestrial oil spill in US
+history, and was slowly oozing its way into the Creek." "In 2010, and in large part due
+to the advocacy efforts of political and local leaders in Brooklyn, the Newtown Creek
+was designated a Superfund site by the Federal United States Environmental Protection
+Agency, slating it for a major cleanup to remove past industrial waste." Cleanup is delayed
+until 2032. In the meantime, local groups, particularly Newtown Creek Alliance are
+spearheading restoration efforts by reintroducing filter feeders and native vegetation to
+the creek.
+
+    NYS DEC's regulations state that DO must not go below 4.8 mg/L due to the health
+and reproductive ability of fish and other marine orgnaisms being significantly impacted
+by DO levels lower than this threshold. In this report, 5 mg/L is used as a standard. DEC
+defines an equation, determined through experimentation on multiple genera of marine
+organisms, which can be used to determine a time interval in days for which a body of
+water may safely dip below the 4.8 mg/L threshold. This equation is more complex than
+the analysis contained herein allows for, so a simple 5 mg/L threshold is considered.
+
+    Dissolved Oxygen can vary widely based on time of day, time of year., and weather,
+among other factors. This is especially the case in Newtown Creek, where the waterway
+contains CSO (Combined Sewer Overflow) outlets, which dump untreated sewage into the
+waterway during heavy rain events. Raw sewage contains high levels of nutrients, that
+becomes food for microorganisms like algae which, after running out of those nutrients,
+will die, and once they die, they will be decomposed by aerobic bacteria. It is these
+bacteria which eventually consume dissolved oxygen in large amounts, and contribute in
+large part to hypoxic or anoxic conditions in the waterway.
+
+    So not only is dissolved oxygen subject to variations unique to this waterwaty, this
+dataset also contained unique characteristics which were taken into account when devising
+a plan to analyze the Dissolved Oxygen data, the most impactful of which is that the
+NYC DEP uses 2 methods to collect data on DO in the New York Harbor.
+
+   1. An in-situ device, Seabird CTD with DO sensor attached.
+
+   1. Azide-modified Winkler titration method performed aboard a DEP vessel.
+
+The in-situ sensor is highly accurate, but prone to drift, and needs calibration from time
+to time. The Winkler method is viewed as the gold standard for accuracy in measuring
+dissolved oxygen in water, but is also prone to error, when taking samples, care must be
+taken to avoid letting oxygen dissolve in the water sample before the analysis is conducted,
+the sample must ideally not be exposed to air, and also not be jostled or shaken, which
+might cause oxygen to dissolve into the water. Samples are also taken at varying depths,
+so a samples are divided further into "top" (1m below surface) or "bottom" (1m above
+creek bottom) measurements.
+
+    This leaves us with a dataset which is difficult to analyze as a whole. Therefore, the
+decision was made to first break the data into smaller sets, along lines of measurement
+method, depth, and season. Probabilities were calculated based on these groups, and
+then overall probabilities were calculated afterwards for comparison.
+
+                                                        3
+    Further, this dataset refused to fit neatly into a simple model statistical distribution.
+Dissolved oxygen has reason to be modeled as lognormal, as it's not possible for DO
+concentrations to be negative, but there are also hard physical upper limits on the amount
+of DO which can be in solution, which is generally a function of temperature (colder
+water can hold more oxygen). The maximum value recorded in the dataset is a surface
+measurement via the CTD machine's DO sensor, which recorded a value of 21.99 mg/L. In
+general, DO in waterways is not thought of as normally distributed, in fact, it frequently
+modeled using complex statistical distributions, because predicting DO levels in open
+waterways means predicting one marker of a highly complex natural dynamical system,
+with which humans are interacting and adding more confounding variables like CSO
+events and pollution. Industrial pollution is just one of many particularly tricky variables
+to deal with, because it may go unnoticed, or unreported, or people may even be trying
+to hide it for a time.
+
+    For all of these reasons, analysis using low-complexity statistical models (normal and
+lognormal) were less appealing than simply using the observational data to calculate
+empirically based probabilities. Multiple models were tried, none with particularly good
+fit in all combinations of method, depth, season or location, but all did generally hover
+around similar probabilities to that which was empirically calculated.
+
+                                              Figure 1: Enter Caption
+
+2 Procedure
+
+2.1 Data Procurement and cleaning
+
+The source is the NYC Open Data Harbor Water Quality dataset. Since only the down-
+stream segment of Newtown Creek is of interest, NC1, NC2 and NC3 records were se-
+
+                                                        4
+lected, along with sampling dates, times and the four DO measurements.
+    The existing seasonal definitions are used throughout:
+
+    · Summer: June 21 through September 20.
+    · Winter: December 21 through March 20.
+    · Spring/Fall: all remaining dates.
+
+2.2 Probability calculations
+
+A low-oxygen event is defined as DO at or below 5 mg/L. For each combination of
+site, measurement type, depth, and season, excluding all missing readings, the empirical
+probability was calculated as follows:
+
+P (DO  5) =  number of usable readings at or below 5 mg/L               .
+
+             number of usable readings
+
+    Separate surface-reading and bottom-reading tables were produced, each containing
+20 rows:
+
+1. Twelve rows for three sites, two methods and two seasons.
+2. Six rows combining CTD and Winkler readings within each site and season.
+3. Two rows combining both methods and all three sites within each season.
+
+    For combined groups, low-oxygen counts and reading counts are added before dividing.
+The analysis does not average the individual group probabilities. Meaning, it is not
+a weighted average, as there is not enough evidence available from the NYC DEP to
+support a rationale for weighting the two methods. The DEP was sent a letter regarding
+this matter but has not responded at the time of writing.
+
+    Histograms were used to visualize the data as well as the logged data. But visual
+analysis alone was not enough to determine wether the data were either normal, lognormal
+or neither. So, Anderson Darling tests were performed on original DO and on the natural
+logarithms of only positive readings (excluding zeros).
+
+    The tests are not definitive, and are not adjusted for the possibility that multiple tests
+can raise the probability of false positives, DO measurement errors or the possibility that
+DO measurements are temporal dependent upon one another. They suggest less evidence
+to reject normality than to reject log-normality, so are presented alongside probability
+calculations which assuming normality, though obviously those probability values are not
+meant to be definitive either.
+
+2.3 Joint low-oxygen probabilities
+
+The questions which this report is meant to answer required samples to be matched by
+date and time. Luckily, a very high proportion of the measurements which occurred
+on the same day as one another were taken within 60 minutes. The objective was to
+analyze probabilities of simultaneous measurements, and 60 minute windows were deemed
+worthy of being dubbed "simultaneous." Some days in the dataset had multiple rounds
+of measurements, care was taken to separate these into matching groups as well.
+
+                              5
+    While doing the calculations to obtain the answers to the questions: "What is the
+probability of not meeting standards simultaneously at all sites? Probability of exactly
+one of any of the sites not meeting the standard?" Only matched sampling events with
+usable DO at all three sites were retained. Calculations are performed separately for the
+four measurement types, pooling all seasons and sampled years.
+
+    For each measurement type, the denominator is the number of complete three-site
+events. The two numerators count:
+
+    · Events where all three site readings are at or below 5 mg/L.
+
+    · Events where exactly one site reading is at or below 5 mg/L and the other two
+       readings are above 5 mg/L.
+
+    Each count is divided by the same denominator (total number of 3 simultaneous
+measurement events). These, too, are direct empirical frequencies; it is assumed that si-
+multaneous readings at sites along the same waterway, not far from one another, must not
+be statistically independent. Therefore, empirical calculation was deemed more reliable
+than fitting to a binomial distribution, which would otherwise seem the logical choice.
+
+                      Pall three = P (DONC1  5, DONC2  5, DONC3  5) .
+
+                   Pexactly one = P (DONC1  5, DONC2 > 5, DONC3 > 5)
+                                    + P (DONC1 > 5, DONC2  5, DONC3 > 5)
+                                    + P (DONC1 > 5, DONC2 > 5, DONC3  5) .
+
+2.4 Paired comparisons of the means of dissolved oxygen
+
+To answer the question "Are the average DO levels at these sites different from each
+other at the 95% confidence level? " two-sided paired t-tests were performed separately
+for winter, summer, spring/fall, and all seasons together.
+
+                                                          d¯
+                                                  t= 
+
+                                                       sd/ n
+
+    where d¯ is the difference in means of the paired data, sd is the sample standard
+deviation, and n is the number of matched pairs.
+
+    A table of p-values was generated using this t-test method, p-values below 0.05 indi-
+cate that there is not enough evidence to say that the two means are different from one
+another at the 95% confidence level. Although it is both likely that the paired sampling
+events dependent upon one another, and that there may be temporal dependence in the
+data (persistent environmental conditions could affect multiple measurement events in a
+row), the paired t-test only accounts for dependence among the paired values, and not
+temporal dependence. The p-values were not adjusted for multiple comparisons.
+
+2.5 Assessing the possibility of correlation between sites
+
+Finally, the analysis conducted to determine wether daily changes at each sampling site
+are correlated with one another was undertaken as follows. The same set of data for
+which there is a paired sample event for all three sites which was used to examine the
+
+                                                        6
+difference in means was used to answer this question as well. For each site, the change
+from the previous matched occasion is divided by the elapsed number of calendar days:
+
+ratesite,t  =  DOsite,t  -  DOsite,t-1 ,
+                 Datet   -  Datet-1
+
+    The units are mg/L/day. These are average rates over sampling intervals. They are
+not direct measurements of every day's change. All sites use the same start and end dates
+for each interval.
+
+    After the rates of change between each sample event were calculated, Pearson corre-
+lation coefficients (r) were calculated between the NC1-NC2, NC2-NC3 and NC1-NC3
+rate vectors, separately for each method/depth. Results are tabulated below.
+
+               7
+3 Results and Analysis
+
+Due to the reasons discussed in the introduction, the data was separated into smaller
+groups, and probabilities were calculated separately for method, depth, location and
+season. The goal of presenting the probabilities in this way is to give the whole picture.
+
+    In the analysis, test method and sites are combined at points to illustrate overall
+probabilities, but without weighting sites or methods, because no scientific justification
+could be found for using weighting some sights or methods any higher than others. How-
+ever, depth and season are never combined, as fluctuations across seasons are so large
+that if seasons were combined, the calculated probabilities would be largely meaningless.
+It is important to note that the reason the analysis is conducted using the smaller con-
+stituents was to preserve potential differences that could become obscured by pooling
+sites and methods from the beginning.
+
+    The issue is however, breaking the dataset into so many smaller pieces also contributes
+to a factor of meaninglessness. So in an effort to give full context, and make things more
+easily understood, methods and sites are finally combined to give one seasonal probability
+per season and depth. An initial visualization showing the real distribution of the data
+when sample sites and methods are combined may be useful for helping situate the
+calculated results into proper context.
+
+Figure 2: Histogram visualization of data divided only by depth and season. Site and method
+are pooled.
+
+    A full summary with medians, median, standard deviation etc. for each combination
+of site depth, method and season is available in the appendix, along with histograms
+visualizing each of these combinations' data distribution.
+
+                                                        8
+3.1 Probabilities of not meeting the 5 mg/L standards at each
+       site across seasons
+
+Probabilities for DO levels falling below the threshold presented below, organized by
+season, site, test method, and depth. This excludes sample data that falls outside of
+summer or winter. Something to keep in mind when examining the probabilities presented
+is that the average sample size for each of the data subsets for summer is around n  260,
+While the average sample size for the winter data sets is around n  43.
+
+Table 1: Empirical probabilities of dissolved oxygen at or below 5 mg/L by site, depth, method,
+and season.
+
+           Summer               Winter
+
+Site Depth CTD Winkler CTD Winkler
+
+NC1 Top 0.584 0.699 0.086 0.077
+
+NC1 Bottom 0.992 0.816 0.029 0.019
+
+NC2 Top 0.631 0.665 0.057 0.019
+
+NC2 Bottom 0.964 0.739 0.029 0.000
+
+NC3 Top 0.619 0.617 0.114 0.019
+
+NC3 Bottom 0.913 0.689 0.088 0.000
+
+    The probabilities based on the data broken into its smallest constituent pieces starts to
+show trends. The probability of dropping below the threshold appears to be much lower
+in the winter than in the summer. And for both seasons, the Winkler titration method
+appears to give a lower probability, this pattern is stronger for the winter subsets. As
+mentioned before however, the winter subsets have a smaller sample size.
+
+Table 2: Empirical probabilities of dissolved oxygen at or below 5 mg/L with CTD and Winkler
+readings pooled, by site, depth, and season, including estimates pooled across all sites.
+
+Site       Depth      Summer    Winter
+NC1        Top           0.644    0.080
+NC1        Bottom        0.901    0.023
+NC2        Top           0.649    0.034
+NC2        Bottom        0.848    0.011
+NC3        Top           0.618    0.057
+NC3        Bottom        0.798    0.035
+All sites  Top           0.637    0.057
+All sites  Bottom        0.849    0.023
+
+    provide analysis for above table spread of averages does not seem too crazy. df=2
+seems basically too small to run t test tho
+
+                   9
+Figure 3: Surface readings. Top row: Empirical probabilities of dissolved oxygen at or below
+5 mg/L, grouped by season, site, method. Bottom row: Probabilities of combined methods and
+combined methods and sites. Whiskers show Clopper-Pearson 95% confidence intervals.
+
+Figure 4: Creek bottom readings. Top row: Empirical probabilities of dissolved oxygen at or
+below 5 mg/L, grouped by season, site, method. Bottom row: Probabilities of combined methods
+and combined methods and sites. Whiskers show Clopper-Pearson 95% confidence intervals.
+
+                                                       10
+    95% Clopper-Pearson binomial confidence intervalsare smaller for summer due to
+larger sample size. These do not represent linear regression but a trend does emerge from
+this visualization that shows the probability of crossing the threshold is basically always
+higher farther inland during summer, but during winter there doesn't appear to be a
+trend. deserves further investigation.
+
+    These Clopper-Pearson intervals assume that the test observations are independent
+and share common probabilities of occurrence within each group. For the groupings by
+site and method, the confidence interval may be more trustworthy than for the combined
+methods and sites groups. While there is most likely some temporal dependence in the
+site- and method-separated groups, it would be less of a confounding factor to the CP
+method than the combined groups, which are likely dependent across time and space.
+Further, methods may seem unrelated, and therefore offering some independence, but as
+the DEP states in the Harbor quality report, the winkler method is used to calibrate
+the CTD method, which may introduce some dependence. So the CP method may be
+more trustworthy for the separated groups, and less trustworthy for the combined groups
+confidence interval, even though it is smaller for the combined groups.
+
+3.2 Simultaneous probability analysis
+
+Estimates for the likelihoods of all three sites falling below the threshold, and for exactly
+one of any of the three sites falling below the threshold are presented on the table below.
+
+Table 3: Joint DO failure probabilities from matched observations, approximating simultaneous
+conditions. All seasons pooled. n is the sample size. Failure means DO at or below 5 mg/L.
+
+Measurement  n All 3 fail Only 1 fails
+
+CTD bottom 506 0.571      0.0870
+
+CTD top      508 0.335    0.132
+
+Winkler bottom 562 0.375  0.137
+
+Winkler top  570 0.325    0.121
+
+    These calculation results are interesting. Firstly, the probability for all three sites
+falling below the threshold at the top and bottom appears to be about one third, with
+the notable exception of the CTD bottom method, which puts it at over one half. The
+probabilities across both winkler groups and the CTD top also appear to be largely in
+agreement, but the CTD bottom measurement shows a lower probability. This may point
+to a higher likelihood of failure for one or more other site if one site fails, and perhaps
+warrants a Bayesian statistical analysis. There is also the possibility of the CTD bottom
+sensor having an issue, or being calibrated less often due to its depth.
+
+    Before discussing the results of these calculations any further, the limitations of this
+analysis must be acknowledged. As described in the procedure section, these calculations
+are made from a dataset which matches measurements which took place on the same
+day. When samples appear in the data across sites and methods, most of those samples
+were taken within 60 minutes of one another. They are referred to as simultaneous, but
+DO levels can fluctuate rapidly throughout the day, particularly with water temperature,
+so it must be recognized that these measurements are not truly simultaneous, and some
+unquantified error is contained therein.
+
+    Secondly, there may be a reason why measurements were taken at all three locations,
+as opposed to only one or another. Thst reason could be consistent across many or most
+
+             11
+of these matched sampling events. Particularly, it could be the case that samples were
+collected at all three locations on days where weather was good, or waters were calm
+enough to sail for an extended period of time. This could create a bias in the dataset
+by leaving out the unmatched data which might have been collected under different
+environmental conditions.
+
+    This dataset also examines data across all seasons of every year, it doesn't take into
+account the possibility of varying probabilities across seasons (it may be more likely that
+all 3 fail in the winter for instance). There are many other ways this data is inadequate
+for representing a true probability, including but not limited to the measurement errors
+and uncertainties related to instruments and methods around the threshold of 5 mg/L,
+and the previously discussed likelihood of temporal dependence.
+
+           Figure 5: Whiskers show Clopper-Pearson 95% confidence intervals.
+
+    Here the same results are represented on a similar plot to the ones used in the previous
+calculations.
+
+3.3 Testing mean differences at 95% confidence
+
+Q3
+
+Table 4: Paired t-test p-values comparing mean dissolved oxygen between sites, rounded to three
+significant figures. P-values are unadjusted for multiple comparisons and temporal dependence.
+All year pools all seasons and sampled years.
+
+                   Summer                            Winter      Spring/Fall                All year
+
+Site pair  Depth   CTD     Winkler            CTD Winkler        CTD  Winkler               CTD       Winkler
+NC1­NC2    Top
+NC1­NC2    Bottom  0.325 1.96 × 10-6          0.590  0.0104      0.0235 1.59 × 10-6         0.563 7.53 × 10-13
+NC2­NC3    Top
+NC2­NC3    Bottom  7.14 × 10-38 4.69 × 10-19  0.679  0.00225     2.74 × 10-23 1.78 × 10-16  5.26 × 10-46 5.72 × 10-36
+NC1­NC3    Top
+NC1­NC3    Bottom  0.308 0.000675             0.427  0.00746     0.202 5.82 × 10-6          0.0891 1.49 × 10-9
+
+                   1.89 × 10-54 8.31 × 10-11  0.121  0.00293     3.91 × 10-30 6.20 × 10-10  1.24 × 10-77 3.21 × 10-21
+
+                   0.904 6.01 × 10-13         0.915  0.00154     0.00264 4.60 × 10-12       0.0828 9.37 × 10-26
+
+                   3.64 × 10-79 1.43 × 10-33  0.286 9.86 × 10-5  1.33 × 10-50 1.20 × 10-22  4.78 × 10-111 1.42 × 10-56
+
+                                                     12
+    Nine out of 48 of these tests fail to meet the threshold of evidence which would indicate
+that there is no difference in means. In other words, by this paired t-test, much more
+often than not, for different combinations of locations, depths, methods and seasons,
+including all seasons, at a 95% confidence level the means are significantly different from
+one another.
+
+    Notably the CTD surface measurements are the only ones which fail the t-test. No
+groups associated with the winkler method fail, and only CTD bottom fails in the winter.
+
+    At a significance level of 0.05, a p-value below 0.05 indicates evidence against zero
+mean difference. However, that significance level is unadjusted for the large family of
+tests which were conducted. Larger p-values do not establish equality or similarity, they
+just show that there is not enough evidence to say that the means are different.
+
+3.4 Daily change correlation
+
+This excludes matched occasions where there may have been samples at two of the sites
+but not a third site. Using all paired sites across all three combinations of sample sites
+would have resulted in effectively using different populations to conduct each comparison.
+Using the same dataset for all comparisons was deemed to be more informative.
+
+                                                         Figure 6
+
+    Scatterplots show the three site pairs in columns and the four method/depth combi-
+nations in rows.
+
+                                                       13
+Table 5: Pearson correlation coefficients (r) between sites' average DO changes per day. All
+seasons pooled; methods and depths kept separate.
+
+Depth   Method   NC1-NC2     NC2-NC3     NC1-NC3
+Top     CTD           0.780       0.822       0.660
+Top     Winkler       0.722       0.748       0.624
+Bottom  CTD           0.660       0.735       0.531
+Bottom  Winkler       0.801       0.735       0.614
+
+    Positive correlations indicate that the average rates tend to move together. They do
+not establish causation or statistical significance. All seasons are pooled. The lines are
+descriptive.
+
+    Calculating change across days, weeks or months is treated the same in pursuit of an
+average DO change per day. This actually flattens real daily fluctuations. In the current
+matched data, intervals are positive, the median gap is seven days, and some gaps extend
+for months. Rates calculated over long gaps smooth fluctuations that may have occurred
+within the interval. For instance, some gaps between samples were as long as several
+months.
+
+4 Conclusions
+
+Data were broken apart but overall probability of falling below the threshold in summer
+is around 60%, in winter it is around 5%.
+
+References
+
+[1] New York State Department of Environmental Conservation, Division of Water. (2008,
+    November 4). Interpretation guidance for marine dissolved oxygen (DO) standard.
+    Technical and Operational Guidance Series (TOGS) 1.1.6. https://extapps.dec.
+    ny.gov/docs/water_pdf/togs116.pdf
+
+[2] Heisler, J., Glibert, P., Burkholder, J., Anderson, D., Cochlan, W., Dennison, W.,
+    Gobler, C., Dortch, Q., Heil, C., Humphries, E., Lewitus, A., Magnien, R., Marshall,
+    H., Sellner, K., Stockwell, D., Stoecker, D., and Suddleson, M. (2008). Eutrophication
+    and harmful algal blooms: A scientific consensus. Harmful Algae, 8 (1), 3­13. https:
+    //doi.org/10.1016/j.hal.2008.08.006
+
+[3] National Environmental Methods Index. (n.d.). Standard Methods: 4500-O C: Oxygen
+    by azide modification. Method summary. Accessed November 13, 2026. https://www.
+    nemi.gov/methods/method_summary/7389/
+
+[4] New York City Department of Environmental Protection. (n.d.). 2025 Harbor Sur-
+    vey Report. ArcGIS StoryMaps. Accessed November 13, 2026. https://storymaps.
+    arcgis.com/stories/4afe01df35e1464580a718f633e0433c
+
+[5] He, H., Boehringer, T., Scha¨fer, B., Heppell, K., and Beck, C. (2024). Analyz-
+    ing spatio-temporal dynamics of dissolved oxygen for the River Thames using su-
+    perstatistical methods and machine learning. Scientific Reports, 14, Article 21288.
+    https://doi.org/10.1038/s41598-024-72084-w
+
+                                                       14
+[6] Stajkowski, S., Zeynoddin, M., Farghaly, H., Gharabaghi, B., and Bonakdari, H.
+    (2020). A methodology for forecasting dissolved oxygen in urban streams. Water,
+    12 (9), Article 2568. https://doi.org/10.3390/w12092568
+
+                                                       15
+A Summary statistics
+
+Table 6: Seasonal DO summaries by site and measurement. Mean and SD in mg/L.
+
+site Measurement Season n mean  skewness median minimum max
+
+NC1 CTD bottom Summer 249 1.926 1.266 0.448 1.890                                     0.04 5.81
+
+NC1 CTD bottom Winter 35 8.984 2.488 -0.732 9.130                                     1.16 13.41
+
+NC1 CTD top      Summer 250 4.826 2.993 1.392 4.575                                   0.06 21.71
+
+NC1 CTD top      Winter 35 9.332 3.707 0.781 9.450                                    1.24 21.99
+
+NC1 winkler bottom Summer 267 3.336 1.816 0.102 3.210                                 0.00 8.26
+
+NC1 winkler bottom Winter 52 9.928 2.371 0.375 9.635                                  4.18 16.45
+
+NC1 winkler top  Summer 269 3.953 2.183                 0.412 3.910                   0.00 11.86
+
+NC1 winkler top  Winter 52 9.852 2.996                  0.387 9.430                   3.79 17.21
+
+NC2 CTD bottom Summer 252 2.735 1.243 -0.090 2.858                                    0.02 6.15
+
+NC2 CTD bottom Winter 35 9.134 3.271 0.896 9.330                                      1.20 20.97
+
+NC2 CTD top      Summer 252 4.672 2.404 0.940 4.346                                   0.25 15.35
+
+NC2 CTD top      Winter 35 9.217 3.109 -0.053 9.460                                   1.21 17.39
+
+NC2 winkler bottom Summer 268 3.986 1.838 0.341 3.840                                 0.00 10.06
+
+NC2 winkler bottom Winter 52 10.307 2.092 0.652 10.045                                6.69 16.34
+
+NC2 winkler top  Summer 269 4.413 2.111                 0.877 4.330                   0.00 15.85
+
+NC2 winkler top  Winter 52 10.257 2.583                 0.578 9.945                   4.22 17.71
+
+NC3 CTD bottom Summer 252 3.731 1.005 0.296 3.680                                     1.11 7.25
+
+NC3 CTD bottom Winter 34 9.442 3.149 0.243 9.640                                      1.15 19.23
+
+NC3 CTD top      Summer 252 4.797 2.124 1.971 4.515                                   0.95 17.83
+
+NC3 CTD top      Winter 35 9.363 3.322 -0.082 9.610                                   1.10 18.56
+
+NC3 winkler bottom Summer 267 4.502 1.294 0.797 4.370                                 1.55 10.21
+
+NC3 winkler bottom Winter 52 10.752 1.366 0.456 10.755                                8.18 14.87
+
+NC3 winkler top  Summer 269 4.726 1.517                 0.541 4.470                   0.06 11.10
+
+NC3 winkler top  Winter 52 10.704 1.878 -0.159 10.675                                 4.48 15.07
+
+Table 7: Seasonal DO summaries pooled across sites. Mean, SD, minimum and maximum in
+mg/L.
+
+Measurement      Season  total rows   missing rows      usable values    zero rows        mean        sd
+CTD bottom       Summer         1089              336               753            0   2.80095  1.38819
+CTD bottom       Winter          156               52               104            0   9.18423  2.96445
+CTD top          Summer         1090              336               754            0   4.76500  2.52933
+CTD top          Winter          156               51               105            0   9.30401  3.35639
+Winkler bottom   Summer         1090              288               802           17   3.94152  1.73342
+Winkler bottom   Winter          156                 0              156            0  10.32897  2.00438
+Winkler top      Summer         1090              283               807           13   4.36385  1.98306
+Winkler top      Winter          156                 0              156            0  10.27083  2.53591
+
+                                      16
+     Table 8: DO data quality counts across all dates.
+
+Sampling.Location Measurement         total rows missing rows usable rows zer
+
+NC1  Dissolved Oxygen CTD bottom      740               233  507
+
+NC1  Dissolved Oxygen CTD top         741               233  508
+
+NC1  Dissolved Oxygen winkler bottom  741               178  563
+
+NC1  Dissolved Oxygen winkler top     741               171  570
+
+NC2  Dissolved Oxygen CTD bottom      741               229  512
+
+NC2  Dissolved Oxygen CTD top         741               229  512
+
+NC2  Dissolved Oxygen winkler bottom  741               177  564
+
+NC2  Dissolved Oxygen winkler top     741               168  573
+
+NC3  Dissolved Oxygen CTD bottom      742               230  512
+
+NC3  Dissolved Oxygen CTD top         742               229  513
+
+NC3  Dissolved Oxygen winkler bottom  742               178  564
+
+NC3  Dissolved Oxygen winkler top     742               169  573
+
+                               17
+B Histogram views of Data
+
+                                       Figure 7: bottom groups histograms
+
+                                                       18
+Figure 8: bottom groups positive value log histograms
+
+                              19
+Figure 9: seasonal histograms
+
+                20
+Figure 10: bottom groups histograms
+
+                    21
+Figure 11: topgroups histograms
+
+                 22
+Figure 12: topgroups log histograms
+
+                   23
+Table 9: Normal and lognormal AD labels for zero-free bottom probability-table groups. Pass
+means failure to reject at 0.05, not proof of the model.
+
+Sampling.Location  Measurement                      Season  minimum         maximum             zero rows
+NC1                Dissolved Oxygen CTD bottom      Summer         0.04            5.81                   0
+NC1                Dissolved Oxygen CTD bottom      Winter         1.16           13.41                   0
+NC1                Dissolved Oxygen winkler bottom  Winter         4.18           16.45                   0
+NC2                Dissolved Oxygen CTD bottom      Summer         0.02            6.15                   0
+NC2                Dissolved Oxygen CTD bottom      Winter         1.20           20.97                   0
+NC2                Dissolved Oxygen winkler bottom  Winter         6.69           16.34                   0
+NC3                Dissolved Oxygen CTD bottom      Summer         1.11            7.25                   0
+NC3                Dissolved Oxygen CTD bottom      Winter         1.15           19.23                   0
+NC3                Dissolved Oxygen winkler bottom  Summer         1.55           10.21                   0
+NC3                Dissolved Oxygen winkler bottom  Winter         8.18           14.87                   0
+NC1                Combined bottom methods          Winter         1.16           16.45                   0
+NC2                Combined bottom methods          Winter         1.20           20.97                   0
+NC3                Combined bottom methods          Summer         1.11           10.21                   0
+NC3                Combined bottom methods          Winter         1.15           19.23                   0
+All sites          Combined bottom methods          Winter         1.15           20.97                   0
+
+Table 10: Anderson-Darling normality tests of logged positive bottom DO in the 20 probability-
+table groups. Zeros excluded from this diagnostic only. Pass means failure to reject at 0.05.
+Group dependence and multiplicity are not adjusted.
+
+Sampling.Location  Measurement                      Season  usable rows             A           p value
+NC1                Dissolved Oxygen CTD bottom      Summer            249   11.88972            0.00000
+NC1                Dissolved Oxygen CTD bottom      Winter              35   2.21984            0.00001
+NC1                Dissolved Oxygen winkler bottom  Summer            254    7.71651            0.00000
+NC1                Dissolved Oxygen winkler bottom  Winter              52   0.44239            0.27734
+NC2                Dissolved Oxygen CTD bottom      Summer            252   18.30616            0.00000
+NC2                Dissolved Oxygen CTD bottom      Winter              35   1.63363            0.00028
+NC2                Dissolved Oxygen winkler bottom  Summer            264    7.48197            0.00000
+NC2                Dissolved Oxygen winkler bottom  Winter              52   0.36113            0.43315
+NC3                Dissolved Oxygen CTD bottom      Summer            252    2.24765            0.00001
+NC3                Dissolved Oxygen CTD bottom      Winter              34   2.08953            0.00002
+NC3                Dissolved Oxygen winkler bottom  Summer            267    1.05859            0.00869
+NC3                Dissolved Oxygen winkler bottom  Winter              52   0.23202            0.79046
+NC1                Combined bottom methods          Summer            503   20.81693            0.00000
+NC1                Combined bottom methods          Winter              87   2.68994            0.00000
+NC2                Combined bottom methods          Summer            516   23.36089            0.00000
+NC2                Combined bottom methods          Winter              87   2.38222            0.00000
+NC3                Combined bottom methods          Summer            519    2.37390            0.00001
+NC3                Combined bottom methods          Winter              86   6.01052            0.00000
+All sites          Combined bottom methods          Summer           1538   85.24599            0.00000
+All sites          Combined bottom methods          Winter            260    9.83769            0.00000
+
+                   24
+Table 11: Anderson-Darling normality tests for bottom DO in the 20 probability-table groups.
+Zeros retained. Pass means failure to reject at 0.05, not proof of normality. Group dependence
+and multiplicity are not adjusted.
+
+Sampling.Location  Measurement                      Season  usable rows            A            p value
+NC1                Dissolved Oxygen CTD bottom      Summer            249   1.64403             0.00031
+NC1                Dissolved Oxygen CTD bottom      Winter              35  0.38473             0.37504
+NC1                Dissolved Oxygen winkler bottom  Summer            267   0.45959             0.25987
+NC1                Dissolved Oxygen winkler bottom  Winter              52  0.40252             0.34596
+NC2                Dissolved Oxygen CTD bottom      Summer            252   0.75911             0.04772
+NC2                Dissolved Oxygen CTD bottom      Winter              35  0.74685             0.04696
+NC2                Dissolved Oxygen winkler bottom  Summer            268   1.15691             0.00497
+NC2                Dissolved Oxygen winkler bottom  Winter              52  0.71044             0.05994
+NC3                Dissolved Oxygen CTD bottom      Summer            252   0.52514             0.17924
+NC3                Dissolved Oxygen CTD bottom      Winter              34  0.65952             0.07782
+NC3                Dissolved Oxygen winkler bottom  Summer            267   1.72139             0.00020
+NC3                Dissolved Oxygen winkler bottom  Winter              52  0.31187             0.54003
+NC1                Combined bottom methods          Summer            516   2.83214             0.00000
+NC1                Combined bottom methods          Winter              87  0.36324             0.43353
+NC2                Combined bottom methods          Summer            520   2.67209             0.00000
+NC2                Combined bottom methods          Winter              87  0.68276             0.07207
+NC3                Combined bottom methods          Summer            519   2.87202             0.00000
+NC3                Combined bottom methods          Winter              86  1.87835             0.00008
+All sites          Combined bottom methods          Summer           1555   2.00725             0.00004
+All sites          Combined bottom methods          Winter            260   1.82896             0.00011
+
+                   25
+C tables
+
+Table 12: Normal and lognormal AD labels for zero-free top probability-table groups. Pass means
+failure to reject at 0.05, not proof of the model.
+
+Sampling.Location Measurement      Season minimum maximum zero rows n
+
+NC1        Dissolved Oxygen CTD top Summer      0.06   21.71                                     0F
+
+NC1        Dissolved Oxygen CTD top Winter      1.24   21.99                                     0P
+
+NC1        Dissolved Oxygen winkler top Winter  3.79   17.21                                     0P
+
+NC2        Dissolved Oxygen CTD top Summer      0.25   15.35                                     0F
+
+NC2        Dissolved Oxygen CTD top Winter      1.21   17.39                                     0P
+
+NC2        Dissolved Oxygen winkler top Winter  4.22   17.71                                     0P
+
+NC3        Dissolved Oxygen CTD top Summer      0.95   17.83                                     0F
+
+NC3        Dissolved Oxygen CTD top Winter      1.10   18.56                                     0P
+
+NC3        Dissolved Oxygen winkler top Summer  0.06   11.10                                     0F
+
+NC3        Dissolved Oxygen winkler top Winter  4.48   15.07                                     0P
+
+NC1        Combined top methods    Winter       1.24   21.99                                     0P
+
+NC2        Combined top methods    Winter       1.21   17.71                                     0P
+
+NC3        Combined top methods    Summer       0.06   17.83                                     0F
+
+NC3        Combined top methods    Winter       1.10   18.56                                     0F
+
+All sites  Combined top methods    Winter       1.10   21.99                                     0F
+
+Table 13: Anderson-Darling normality tests for top DO in the 20 probability-table groups. Zeros
+retained. Pass means failure to reject at 0.05, not proof of normality. Group dependence and
+multiplicity are not adjusted.
+
+Sampling.Location Measurement      Season usable rows  A p value pa
+
+NC1        Dissolved Oxygen CTD top Summer      250 3.31924 0.00000 Fa
+
+NC1        Dissolved Oxygen CTD top Winter      35 0.42101 0.30671 Pa
+
+NC1        Dissolved Oxygen winkler top Summer  269 0.41025 0.34086 Pa
+
+NC1        Dissolved Oxygen winkler top Winter  52 0.57021 0.13240 Pa
+
+NC2        Dissolved Oxygen CTD top Summer      252 3.08564 0.00000 Fa
+
+NC2        Dissolved Oxygen CTD top Winter      35 0.31792 0.52242 Pa
+
+NC2        Dissolved Oxygen winkler top Summer  269 1.78084 0.00014 Fa
+
+NC2        Dissolved Oxygen winkler top Winter  52 0.44724 0.26988 Pa
+
+NC3        Dissolved Oxygen CTD top Summer      252 6.38920 0.00000 Fa
+
+NC3        Dissolved Oxygen CTD top Winter      35 0.53616 0.15798 Pa
+
+NC3        Dissolved Oxygen winkler top Summer  269 1.79963 0.00013 Fa
+
+NC3        Dissolved Oxygen winkler top Winter  52 0.50123 0.19846 Pa
+
+NC1        Combined top methods    Summer       519 4.06049 0.00000 Fa
+
+NC1        Combined top methods    Winter       87 0.57971 0.12783 Pa
+
+NC2        Combined top methods    Summer       521 4.65027 0.00000 Fa
+
+NC2        Combined top methods    Winter       87 0.30055 0.57351 Pa
+
+NC3        Combined top methods    Summer       521 7.87094 0.00000 Fa
+
+NC3        Combined top methods    Winter       87 1.51478 0.00062 Fa
+
+All sites  Combined top methods    Summer       1561 14.09265 0.00000 Fa
+
+All sites  Combined top methods    Winter       261 1.27455 0.00255 Fa
+
+                               26
+Table 14: Anderson-Darling normality tests of logged positive top DO in the 20 probability-table
+groups. Zeros excluded from this diagnostic only. Pass means failure to reject at 0.05. Group
+dependence and multiplicity are not adjusted.
+
+Sampling.Location Measurement      Season usable rows  A p value pa
+
+NC1        Dissolved Oxygen CTD top Summer      250 7.89531 0.00000 Fa
+
+NC1        Dissolved Oxygen CTD top Winter      35 1.21986 0.00302 Fa
+
+NC1        Dissolved Oxygen winkler top Summer  259 7.12068 0.00000 Fa
+
+NC1        Dissolved Oxygen winkler top Winter  52 0.73976 0.05061 Pa
+
+NC2        Dissolved Oxygen CTD top Summer      252 4.96283 0.00000 Fa
+
+NC2        Dissolved Oxygen CTD top Winter      35 1.45670 0.00077 Fa
+
+NC2        Dissolved Oxygen winkler top Summer  266 7.40035 0.00000 Fa
+
+NC2        Dissolved Oxygen winkler top Winter  52 0.21510 0.83969 Pa
+
+NC3        Dissolved Oxygen CTD top Summer      252 1.57887 0.00045 Fa
+
+NC3        Dissolved Oxygen CTD top Winter      35 2.18567 0.00001 Fa
+
+NC3        Dissolved Oxygen winkler top Summer  269 7.71555 0.00000 Fa
+
+NC3        Dissolved Oxygen winkler top Winter  52 0.78196 0.03968 Fa
+
+NC1        Combined top methods    Summer       509 14.41550 0.00000 Fa
+
+NC1        Combined top methods    Winter       87 1.77136 0.00014 Fa
+
+NC2        Combined top methods    Summer       518 11.82930 0.00000 Fa
+
+NC2        Combined top methods    Winter       87 1.92581 0.00006 Fa
+
+NC3        Combined top methods    Summer       521 7.62167 0.00000 Fa
+
+NC3        Combined top methods    Winter       87 5.79715 0.00000 Fa
+
+All sites  Combined top methods    Summer       1548 43.81817 0.00000 Fa
+
+All sites  Combined top methods    Winter       261 8.20804 0.00000 Fa
+
+                               27
+

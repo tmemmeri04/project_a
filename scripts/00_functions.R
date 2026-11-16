@@ -23,12 +23,21 @@ write_plain_csv <- function(table, path) {
   readr::write_csv(table, connection)
 }
 
-export_table <- function(table, name, caption, digits = 5) {
+export_table <- function(table, name, caption, digits = 5, format_args = list(),
+                         significant_digits = NULL) {
   table_path <- file.path("outputs", "tables", name)
   write_plain_csv(table, paste0(table_path, ".csv"))
+  latex_data <- table
+  if (!is.null(significant_digits)) {
+    # Choose decimal/scientific notation per value; retain significant zeros.
+    numeric_columns <- vapply(latex_data, is.numeric, logical(1))
+    latex_data[numeric_columns] <- lapply(latex_data[numeric_columns], function(values) {
+      trimws(formatC(values, format = "g", digits = significant_digits, flag = "#"))
+    })
+  }
   latex_table <- knitr::kable(
-    table, format = "latex", row.names = FALSE, digits = digits,
-    caption = caption
+    latex_data, format = "latex", row.names = FALSE, digits = digits,
+    caption = caption, format.args = format_args
   )
   writeLines(as.character(latex_table), paste0(table_path, ".tex"))
 }

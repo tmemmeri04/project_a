@@ -119,8 +119,8 @@ for (i in seq_len(nrow(summarized_simultaneous_measurements))) {
 }
 check(TRUE, "Question 2 event counts and joint probabilities")
 
-method_labels <- c(Dissolved_Oxygen_CTD_top = "CTD_top", Dissolved_Oxygen_CTD_bottom = "CTD_bottom",
-                  Dissolved_Oxygen_winkler_top = "Winkler_top", Dissolved_Oxygen_winkler_bottom = "Winkler_bottom")
+method_labels <- c(Dissolved_Oxygen_CTD_top = "CTD top", Dissolved_Oxygen_CTD_bottom = "CTD bottom",
+                  Dissolved_Oxygen_winkler_top = "Winkler top", Dissolved_Oxygen_winkler_bottom = "Winkler bottom")
 check(nrow(t_test_mean_diff) == 12L && ncol(t_test_mean_diff) == 6L &&
       all(as.character(t_test_mean_diff$Season[10:12]) == "All year"), "Question 3 table layout")
 for (pair in c("NC1-NC2", "NC2-NC3", "NC1-NC3")) {
@@ -133,7 +133,7 @@ for (pair in c("NC1-NC2", "NC2-NC3", "NC1-NC3")) {
       differences <- data[[sites[1]]][complete] - data[[sites[2]]][complete]
       row <- t_test_mean_diff |> filter(Pair == pair, Season == season)
       stopifnot(length(differences) >= 2, is.finite(row[[method_labels[[measurement]]]]),
-                same(t.test(differences, mu = 0)$p.value, row[[method_labels[[measurement]]]]))
+                same(signif(t.test(differences, mu = 0)$p.value, 3), row[[method_labels[[measurement]]]]))
     }
   }
 }
@@ -181,6 +181,16 @@ for (depth in c("top", "bottom")) {
     n <- if (logged) sum(diagnostic$lognormality_results$usable_rows) else sum(diagnostic$normality_results$usable_rows)
     stopifnot(nrow(built$layout$layout) == 20L, sum(built$data[[1]]$count) == n)
   }
+  pooled <- diagnostic$grouped_data |>
+    filter(Measurement == paste("Combined", depth, "methods"), !is.na(Dissolved_Oxygen))
+  built <- ggplot_build(diagnostic$pooled_histograms)
+  expected_counts <- pooled |> count(panel)
+  for (i in seq_len(nrow(expected_counts))) {
+    panel_id <- built$layout$layout$PANEL[
+      as.character(built$layout$layout$panel) == as.character(expected_counts$panel[i])]
+    stopifnot(sum(built$data[[1]]$count[built$data[[1]]$PANEL == panel_id]) == expected_counts$n[i])
+  }
+  stopifnot(nrow(built$layout$layout) == 8L)
   check(TRUE, paste(depth, "AD tests and histogram counts match probability group readings"))
 }
 check(nrow(normality_results) == 24L && nrow(lognormality_results) == 24L &&
@@ -190,7 +200,7 @@ invisible(capture.output(source("scripts/06_compare_distribution_tests.R")))
 check(nrow(distribution_test_comparison) == 20L && all(distribution_test_comparison$minimum > 0),
       "optional script 06 zero-free comparison")
 
-table_names <- c("summarized_data", "condensed_summary", "year_specific_summary_2025",
+table_names <- c("daily_change_correlations", "summarized_data", "condensed_summary", "year_specific_summary_2025",
   "data_quality_summary", "invalid_oxygen_readings", "unavailable_sample_times",
   "seasonal_probabilities", "joint_probabilities", "paired_site_t_tests",
   "top_seasonal_probabilities", "bottom_seasonal_probabilities",
@@ -199,7 +209,9 @@ table_names <- c("summarized_data", "condensed_summary", "year_specific_summary_
 figure_names <- c("seasonal_histograms", "seasonal_normal_qq", "seasonal_positive_log_histograms",
   "seasonal_positive_log_qq", "exploratory_oxygen_over_time", "exploratory_nc1_winkler_top",
   "exploratory_nc1_winkler_top_after_2010", "seasonal_probabilities", "top_seasonal_probabilities",
-  "bottom_seasonal_probabilities", "daily_change_regressions", "top_grouped_histograms",
+  "bottom_seasonal_probabilities", "daily_change_regressions",
+  "all_sites_combined_histograms", "joint_probabilities",
+  "top_combined_methods_histograms", "bottom_combined_methods_histograms", "top_grouped_histograms",
   "top_grouped_positive_log_histograms", "bottom_grouped_histograms", "bottom_grouped_positive_log_histograms")
 for (name in table_names) {
   paths <- file.path("outputs", "tables", paste0(name, c(".csv", ".tex")))
@@ -232,7 +244,27 @@ for (name in c("filtered_data.csv", "long_data.csv", "summarized_data.csv")) {
   header <- readBin(file.path("data", "processed", name), "raw", 2)
   stopifnot(!identical(header, as.raw(c(31, 139))))
 }
-check(TRUE, "17 CSV/LaTeX table pairs, 15 PNG/PDF figure pairs and plain processed CSV files")
+four_panel_build <- ggplot_build(all_sites_combined_histograms)
+stopifnot(nrow(four_panel_build$layout$layout) == 4L)
+for (i in seq_len(nrow(all_sites_histogram_counts))) {
+  panel_id <- four_panel_build$layout$layout$PANEL[
+    as.character(four_panel_build$layout$layout$panel) == as.character(all_sites_histogram_counts$panel[i])]
+  stopifnot(sum(four_panel_build$data[[1]]$count[
+    four_panel_build$data[[1]]$PANEL == panel_id]) == all_sites_histogram_counts$sample_size[i])
+}
+for (i in seq_len(nrow(joint_probability_plot_data))) {
+  row <- joint_probability_plot_data[i, ]
+  events <- simultaneous_measurements |> filter(Measurement == row$Measurement)
+  failures <- (events$NC1 <= 5) + (events$NC2 <= 5) + (events$NC3 <= 5)
+  expected_count <- if (as.integer(row$Event) == 1L) sum(failures == 3) else sum(failures == 1)
+  expected_interval <- binom.test(expected_count, nrow(events))$conf.int
+  stopifnot(row$event_count == expected_count,
+    same(row$probability, expected_count / nrow(events)),
+    same(c(row$lower, row$upper), as.numeric(expected_interval)))
+}
+stopifnot(nrow(joint_probability_plot_data) == 8L,
+  nrow(ggplot_build(joint_probability_plot)$layout$layout) == 2L)
+check(TRUE, "18 CSV/LaTeX table pairs, 19 PNG/PDF figure pairs and plain processed CSV files")
 cat("\nRuntime warnings:\n")
 if (length(runtime_warnings)) cat(paste(unique(runtime_warnings), collapse = "\n"), "\n") else cat("None\n")
 cat("\nR:", R.version.string, "\n")
